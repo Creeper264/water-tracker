@@ -36,6 +36,12 @@
           "sounds": []
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "f234c07f-17d1-42b8-936a-66e3c0021456"
+      }
+    },
+    "owner": "0verwhe1med"
   }
 }
