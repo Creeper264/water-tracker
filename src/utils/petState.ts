@@ -27,15 +27,48 @@ export const calculatePetState = (
  * 获取状态对应的提示文字
  */
 export const getPetStateMessage = (state: PetState): string => {
-  const messages: Record<PetState, string> = {
-    dying: "快喝水！我快渴死了...",
-    dehydrated: "有点渴，能给口水吗？",
-    normal: "感觉还不错~",
-    good: "今天状态很好！",
-    happy: "太棒了！已达成目标！",
-    overflow: "喝太多了...游泳中",
+  const messages: Record<PetState, string[]> = {
+    dying: [
+      "救命...水...水...",
+      "我快变成干尸了！",
+      "一滴水都没有吗？",
+      "沙漠...这就是沙漠吗...",
+    ],
+    dehydrated: [
+      "有点渴呢...",
+      "能给我一口水吗？",
+      "嘴唇好干...",
+      "想念水的味道...",
+    ],
+    normal: [
+      "今天还不错~",
+      "继续保持哦！",
+      "记得多喝水~",
+      "我很好，你呢？",
+    ],
+    good: [
+      "快达标啦！加油！",
+      "感觉棒极了！",
+      "继续保持！",
+      "你真棒！",
+    ],
+    happy: [
+      "目标达成！开心！",
+      "我爱喝水！",
+      "完美！继续加油！",
+      "你是最棒的！",
+    ],
+    overflow: [
+      "咕噜咕噜...太多了",
+      "我在游泳啦~",
+      "水有点多了...",
+      "要溢出来啦！",
+    ],
   };
-  return messages[state];
+
+  // 随机返回一条消息
+  const msgs = messages[state];
+  return msgs[Math.floor(Math.random() * msgs.length)];
 };
 
 /**

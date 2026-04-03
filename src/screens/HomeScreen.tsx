@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
+  Animated,
 } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import { DailyLog, UserSettings, StreakData } from "../types";
@@ -42,7 +43,6 @@ const ProgressRing: React.FC<ProgressRingProps> = ({ current, goal }) => {
         height={CIRCLE_SIZE}
         style={{ position: "absolute" }}
       >
-        {/* Background track */}
         <Circle
           cx={center}
           cy={center}
@@ -51,7 +51,6 @@ const ProgressRing: React.FC<ProgressRingProps> = ({ current, goal }) => {
           strokeWidth={16}
           fill="none"
         />
-        {/* Progress arc — starts from top (rotated -90°) */}
         <Circle
           cx={center}
           cy={center}
@@ -102,22 +101,21 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   onRemoveEntry,
 }) => {
   const [streakData, setStreakData] = useState<StreakData | null>(null);
+  const celebrationAnim = useRef(new Animated.Value(0)).current;
 
   const presets = [250, 500, 750, 1000];
   const total = todayLog?.total || 0;
   const goal = settings?.dailyGoal || 2000;
 
-  // 计算小人状态
   const petState = calculatePetState(total, goal);
 
-  // 加载 streak 数据
   useEffect(() => {
     const loadStreak = async () => {
       const data = await getStreakData();
       setStreakData(data);
     };
     loadStreak();
-  }, [todayLog]); // 当 todayLog 变化时重新加载
+  }, [todayLog]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -126,7 +124,21 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     return "Good Evening!";
   };
 
-  // Show newest entries at the top
+  const handlePetPress = () => {
+    Animated.sequence([
+      Animated.timing(celebrationAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(celebrationAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
   const entries = todayLog?.entries ? [...todayLog.entries].reverse() : [];
 
   return (
@@ -134,12 +146,21 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
       <Text style={styles.greeting}>{getGreeting()}</Text>
       <Text style={styles.title}>Hydration Status</Text>
 
-      {/* 像素小人 */}
       <PetCharacter
         state={petState}
         size={100}
         unlockedItems={streakData?.unlockedItems || []}
+        onPress={handlePetPress}
       />
+
+      {streakData && streakData.currentStreak > 0 && (
+        <View style={styles.streakContainer}>
+          <Text style={styles.streakEmoji}>🔥</Text>
+          <Text style={styles.streakText}>
+            连续打卡 {streakData.currentStreak} 天
+          </Text>
+        </View>
+      )}
 
       <ProgressRing current={total} goal={goal} />
 
@@ -198,6 +219,25 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#4FC3F7",
     marginBottom: 20,
+  },
+  streakContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#2d2d44",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  streakEmoji: {
+    fontSize: 16,
+    marginRight: 8,
+  },
+  streakText: {
+    color: "#ffa502",
+    fontSize: 14,
+    fontWeight: "600",
   },
   progressContainer: {
     marginVertical: 20,
