@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { AppState, AppStateStatus } from "react-native";
-import { DailyLog, UserSettings } from "../types";
+import { DailyLog, UserSettings, PetData } from "../types";
 import {
   getToday,
   getDailyLog,
@@ -10,6 +10,7 @@ import {
   saveSettings,
   updateStreak,
 } from "../utils/storage";
+import { feedPet, getPetData } from "../utils/petStorage";
 
 export const useWaterTracker = () => {
   const [todayLog, setTodayLog] = useState<DailyLog | null>(null);
