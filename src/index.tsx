@@ -100,7 +100,13 @@ export default function App() {
             headerTitle: '宠物空间',
           }}
         >
-          {() => <PetScreen streakData={streakData} />}
+          {() => (
+            <PetScreen
+              streakData={streakData}
+              todayLog={todayLog}
+              settings={settings}
+            />
+          )}
         </Tab.Screen>
         <Tab.Screen
           name="Stats"

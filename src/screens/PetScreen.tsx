@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -7,7 +7,8 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
-import { StreakData, PetData } from "../types";
+import * as Notifications from "expo-notifications";
+import { StreakData, PetData, DailyLog, UserSettings } from "../types";
 import { getStreakData } from "../utils/storage";
 import {
   getPetData,
@@ -19,15 +20,64 @@ import { getNextUnlock, getUnlockProgress, DECORATIONS } from "../utils/decorati
 
 interface PetScreenProps {
   streakData: StreakData | null;
+  todayLog: DailyLog | null;
+  settings: UserSettings | null;
 }
 
-const PetScreen: React.FC<PetScreenProps> = ({ streakData }) => {
+// 特殊台词配置
+const SEDENTARY_SPECIAL_LINES = [
+  "提醒你起来活动！顺便去喝点水，我都要渴死了！",
+  "别坐着啦！快去喝杯水，我的喉咙都冒烟了！",
+  "久坐伤身！补水时间到，带我一起喝水吧~",
+  "站起来活动活动！顺便把今天的喝水任务补上！",
+  "已经坐好久了哦！记得喝水，不然我要枯萎了！",
+];
+
+const PetScreen: React.FC<PetScreenProps> = ({ streakData, todayLog, settings }) => {
   const [petData, setPetData] = useState<PetData | null>(null);
   const [editingName, setEditingName] = useState(false);
+  const [specialLine, setSpecialLine] = useState<string | null>(null);
+  const notificationListener = useRef<Notifications.Subscription | null>(null);
 
   useEffect(() => {
     loadPetData();
   }, []);
+
+  // 监听久坐提醒通知
+  useEffect(() => {
+    notificationListener.current = Notifications.addNotificationReceivedListener(
+      (notification) => {
+        const data = notification.request.content.data;
+        // 检测久坐提醒通知
+        if (data?.type === "sedentary") {
+          // 检查饮水进度是否 < 50%
+          const progress = getWaterProgress();
+          if (progress < 50) {
+            // 随机选择一条特殊台词
+            const randomIndex = Math.floor(Math.random() * SEDENTARY_SPECIAL_LINES.length);
+            setSpecialLine(SEDENTARY_SPECIAL_LINES[randomIndex]);
+          }
+        }
+      }
+    );
+
+    return () => {
+      if (notificationListener.current) {
+        notificationListener.current.remove();
+      }
+    };
+  }, [todayLog, settings]);
+
+  // 计算饮水进度百分比
+  const getWaterProgress = (): number => {
+    if (!todayLog || !settings) return 0;
+    return (todayLog.total / settings.dailyGoal) * 100;
+  };
+
+  // 关闭特殊台词
+  const dismissSpecialLine = () => {
+    setSpecialLine(null);
+  };
 
   const loadPetData = async () => {
     const data = await getPetData();
@@ -69,6 +119,19 @@ const PetScreen: React.FC<PetScreenProps> = ({ streakData }) => {
 
   return (
     <ScrollView style={styles.container}>
+      {/* 特殊台词提示 */}
+      {specialLine && (
+        <View style={styles.specialLineContainer}>
+          <View style={styles.specialLineCard}>
+            <Text style={styles.specialLineEmoji}>💬</Text>
+            <Text style={styles.specialLineText}>{specialLine}</Text>
+            <TouchableOpacity onPress={dismissSpecialLine} style={styles.closeButton}>
+              <Text style={styles.closeButtonText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
       {/* 宠物信息卡片 */}
       <View style={styles.petCard}>
         <TouchableOpacity onPress={handleRename}>
@@ -184,6 +247,37 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: "center",
     marginTop: 50,
+  },
+  specialLineContainer: {
+    margin: 16,
+    marginBottom: 0,
+  },
+  specialLineCard: {
+    backgroundColor: "#FF8C00",
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  specialLineEmoji: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  specialLineText: {
+    flex: 1,
+    fontSize: 15,
+    color: "#ffffff",
+    fontWeight: "500",
+    lineHeight: 20,
+  },
+  closeButton: {
+    marginLeft: 12,
+    padding: 4,
+  },
+  closeButtonText: {
+    fontSize: 18,
+    color: "#ffffff",
+    opacity: 0.8,
   },
   petCard: {
     backgroundColor: "#2d2d44",

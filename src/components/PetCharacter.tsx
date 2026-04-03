@@ -6,6 +6,7 @@ import {
   Animated,
   TouchableOpacity,
   Easing,
+  Dimensions,
 } from "react-native";
 import Svg, { Rect, Circle, G, Defs, RadialGradient, Stop } from "react-native-svg";
 import { PetState } from "../types";
@@ -75,10 +76,20 @@ const PetCharacter: React.FC<PetCharacterProps> = ({
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
   const speechAnim = useRef(new Animated.Value(0)).current;
+  const wanderAnimX = useRef(new Animated.Value(0)).current;
+  const facingDirection = useRef(new Animated.Value(1)).current;
 
   // 点击反馈状态
   const [isPressed, setIsPressed] = useState(false);
   const [showHeart, setShowHeart] = useState(false);
+
+  // 游走动画参数
+  const screenWidth = Dimensions.get("window").width;
+  const wanderBounds = {
+    left: -(screenWidth / 2 - size / 2 - 60),
+    right: screenWidth / 2 - size / 2 - 60,
+  };
+  const currentXRef = useRef(0);
 
   // 呼吸动画 - 持续循环
   useEffect(() => {
@@ -201,6 +212,52 @@ const PetCharacter: React.FC<PetCharacterProps> = ({
     }).start();
   }, [message]);
 
+  // 随机游走动画
+  useEffect(() => {
+    let isMounted = true;
+    const animate = () => {
+      if (!isMounted) return;
+
+      // 随机选择目标位置
+      const currentX = currentXRef.current;
+      const targetX = wanderBounds.left + Math.random() * (wanderBounds.right - wanderBounds.left);
+
+      // 更新当前位置引用
+      currentXRef.current = targetX;
+
+      // 根据移动方向更新朝向
+      const direction = targetX > currentX ? 1 : -1;
+      Animated.timing(facingDirection, {
+        toValue: direction,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+
+      // 计算移动时间（基于距离）
+      const distance = Math.abs(targetX - currentX);
+      const duration = Math.max(2000, distance * 8); // 最少2秒
+
+      Animated.timing(wanderAnimX, {
+        toValue: targetX,
+        duration,
+        easing: Easing.inOut(Easing.sin),
+        useNativeDriver: true,
+      }).start(() => {
+        // 等待随机时间后继续移动
+        const waitTime = 1500 + Math.random() * 3000;
+        setTimeout(animate, waitTime);
+      });
+    };
+
+    // 初始延迟后开始游走
+    const initialDelay = setTimeout(animate, 1000);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(initialDelay);
+    };
+  }, [size]);
+
   // 点击处理
   const handlePress = () => {
     setIsPressed(true);
@@ -234,6 +291,9 @@ const PetCharacter: React.FC<PetCharacterProps> = ({
     inputRange: [0, 1],
     outputRange: ["0deg", "10deg"],
   });
+
+  // 水平翻转（用于朝向）
+  const scaleX = facingDirection;
 
   // 根据状态返回不同的眼睛样式
   const getEyes = () => {
@@ -404,7 +464,7 @@ const PetCharacter: React.FC<PetCharacterProps> = ({
           <Animated.View
             style={[
               styles.hat,
-              { transform: [{ translateY: bounceAnim }] },
+              { transform: [{ translateX: wanderAnimX }, { translateY: bounceAnim }] },
             ]}
           >
             <Text style={styles.hatEmoji}>{activeDecorations.hat.emoji}</Text>
@@ -416,7 +476,7 @@ const PetCharacter: React.FC<PetCharacterProps> = ({
           <Animated.View
             style={[
               styles.aura,
-              { transform: [{ translateY: bounceAnim }] },
+              { transform: [{ translateX: wanderAnimX }, { translateY: bounceAnim }] },
             ]}
           >
             <Text style={styles.auraEmoji}>{activeDecorations.aura.emoji}</Text>
@@ -429,7 +489,7 @@ const PetCharacter: React.FC<PetCharacterProps> = ({
             style={[
               styles.stars,
               {
-                transform: [{ translateY: bounceAnim }],
+                transform: [{ translateX: wanderAnimX }, { translateY: bounceAnim }],
                 opacity: glowAnim,
               },
             ]}
@@ -442,6 +502,8 @@ const PetCharacter: React.FC<PetCharacterProps> = ({
         <Animated.View
           style={{
             transform: [
+              { translateX: wanderAnimX },
+              { scaleX },
               { scale: breatheAnim },
               { translateY: bounceAnim },
               { rotate },
