@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'expo-status-bar';
@@ -6,7 +6,10 @@ import { View, Text, StyleSheet } from 'react-native';
 import HomeScreen from './screens/HomeScreen';
 import StatsScreen from './screens/StatsScreen';
 import SettingsScreen from './screens/SettingsScreen';
+import PetScreen from './screens/PetScreen';
 import { useWaterTracker } from './hooks/useWaterTracker';
+import { getStreakData } from './utils/storage';
+import { StreakData } from './types';
 
 const Tab = createBottomTabNavigator();
 
@@ -34,8 +37,25 @@ function SettingsIcon({ focused }: { focused: boolean }) {
   );
 }
 
+function PetIcon({ focused }: { focused: boolean }) {
+  return (
+    <View style={styles.iconContainer}>
+      <Text style={[styles.iconText, focused && styles.iconTextActive]}>💧</Text>
+    </View>
+  );
+}
+
 export default function App() {
   const { todayLog, settings, loading, addWater, removeEntry, updateSettings, refresh } = useWaterTracker();
+  const [streakData, setStreakData] = useState<StreakData | null>(null);
+
+  useEffect(() => {
+    const loadStreak = async () => {
+      const data = await getStreakData();
+      setStreakData(data);
+    };
+    loadStreak();
+  }, [todayLog]);
 
   if (loading) {
     return (
@@ -72,6 +92,15 @@ export default function App() {
               onRemoveEntry={removeEntry}
             />
           )}
+        </Tab.Screen>
+        <Tab.Screen
+          name="Pet"
+          options={{
+            tabBarIcon: PetIcon,
+            headerTitle: '宠物空间',
+          }}
+        >
+          {() => <PetScreen streakData={streakData} />}
         </Tab.Screen>
         <Tab.Screen
           name="Stats"
