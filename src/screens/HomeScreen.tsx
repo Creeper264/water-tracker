@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,10 @@ import {
   Dimensions,
 } from "react-native";
 import Svg, { Circle } from "react-native-svg";
-import { DailyLog, UserSettings } from "../types";
+import { DailyLog, UserSettings, StreakData } from "../types";
+import PetCharacter from "../components/PetCharacter";
+import { calculatePetState } from "../utils/petState";
+import { getStreakData } from "../utils/storage";
 
 const { width } = Dimensions.get("window");
 const CIRCLE_SIZE = width * 0.7;
@@ -98,9 +101,23 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   onAddWater,
   onRemoveEntry,
 }) => {
+  const [streakData, setStreakData] = useState<StreakData | null>(null);
+
   const presets = [250, 500, 750, 1000];
   const total = todayLog?.total || 0;
   const goal = settings?.dailyGoal || 2000;
+
+  // 计算小人状态
+  const petState = calculatePetState(total, goal);
+
+  // 加载 streak 数据
+  useEffect(() => {
+    const loadStreak = async () => {
+      const data = await getStreakData();
+      setStreakData(data);
+    };
+    loadStreak();
+  }, [todayLog]); // 当 todayLog 变化时重新加载
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -116,6 +133,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.greeting}>{getGreeting()}</Text>
       <Text style={styles.title}>Hydration Status</Text>
+
+      {/* 像素小人 */}
+      <PetCharacter
+        state={petState}
+        size={100}
+        unlockedItems={streakData?.unlockedItems || []}
+      />
 
       <ProgressRing current={total} goal={goal} />
 
