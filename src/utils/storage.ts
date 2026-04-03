@@ -30,9 +30,17 @@ const DEFAULT_STREAK: StreakData = {
 // Streak milestones: days → unlocked item ID
 const UNLOCK_MILESTONES: Record<number, string> = {
   3: "hat_cap",
+  5: "trail_stars",
   7: "hat_party",
-  14: "trail_stars",
+  10: "trail_sparkle",
+  14: "hat_crown",
+  15: "trail_heart",
+  21: "hat_wizard",
+  28: "outfit_wings",
   30: "aura_rainbow",
+  35: "accessory_necklace",
+  45: "aura_angel",
+  60: "aura_cosmic",
 };
 
 // ─────────────────────────────────────────────

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
 import Svg, { Rect, Circle, G, Defs, RadialGradient, Stop } from "react-native-svg";
 import { PetState } from "../types";
 import { getPetStateMessage, getPetStateColor } from "../utils/petState";
+import { getDecorationById, Decoration } from "../utils/decorations";
 
 interface PetCharacterProps {
   state: PetState;
@@ -17,6 +18,7 @@ interface PetCharacterProps {
   unlockedItems?: string[];
   showSpeech?: boolean;
   onPress?: () => void;
+  selectedDecorations?: Record<string, string | null>; // category -> decorationId
 }
 
 // 动画值组件
@@ -30,9 +32,42 @@ const PetCharacter: React.FC<PetCharacterProps> = ({
   unlockedItems = [],
   showSpeech = true,
   onPress,
+  selectedDecorations,
 }) => {
   const color = getPetStateColor(state);
   const message = getPetStateMessage(state);
+
+  // 获取要显示的装饰品
+  const activeDecorations = useMemo(() => {
+    const result: Record<string, Decoration | null> = {
+      hat: null,
+      trail: null,
+      aura: null,
+      outfit: null,
+      accessory: null,
+    };
+
+    // 如果有选中的装饰品，优先使用
+    if (selectedDecorations) {
+      Object.entries(selectedDecorations).forEach(([category, id]) => {
+        if (id && unlockedItems.includes(id)) {
+          result[category] = getDecorationById(id) || null;
+        }
+      });
+    } else {
+      // 否则显示第一个解锁的每个类别的装饰品
+      const categories = ["hat", "trail", "aura", "outfit", "accessory"] as const;
+      categories.forEach((category) => {
+        const categoryItems = unlockedItems
+          .map((id) => getDecorationById(id))
+          .filter((d): d is Decoration => d?.category === category)
+          .sort((a, b) => b.requiredDays - a.requiredDays);
+        result[category] = categoryItems[0] || null;
+      });
+    }
+
+    return result;
+  }, [unlockedItems, selectedDecorations]);
 
   // 动画引用
   const breatheAnim = useRef(new Animated.Value(1)).current;
@@ -365,24 +400,41 @@ const PetCharacter: React.FC<PetCharacterProps> = ({
         )}
 
         {/* 装饰品 - 帽子 */}
-        {unlockedItems.includes("hat_cap") && (
+        {activeDecorations.hat && (
           <Animated.View
             style={[
               styles.hat,
               { transform: [{ translateY: bounceAnim }] },
             ]}
           >
-            <Text style={styles.hatEmoji}>🧢</Text>
+            <Text style={styles.hatEmoji}>{activeDecorations.hat.emoji}</Text>
           </Animated.View>
         )}
-        {unlockedItems.includes("hat_party") && (
+
+        {/* 装饰品 - 光环 */}
+        {activeDecorations.aura && (
           <Animated.View
             style={[
-              styles.hat,
+              styles.aura,
               { transform: [{ translateY: bounceAnim }] },
             ]}
           >
-            <Text style={styles.hatEmoji}>🎉</Text>
+            <Text style={styles.auraEmoji}>{activeDecorations.aura.emoji}</Text>
+          </Animated.View>
+        )}
+
+        {/* 装饰品 - 特效轨迹 */}
+        {activeDecorations.trail && (
+          <Animated.View
+            style={[
+              styles.stars,
+              {
+                transform: [{ translateY: bounceAnim }],
+                opacity: glowAnim,
+              },
+            ]}
+          >
+            <Text style={styles.starEmoji}>{activeDecorations.trail.emoji}</Text>
           </Animated.View>
         )}
 
@@ -477,33 +529,6 @@ const PetCharacter: React.FC<PetCharacterProps> = ({
             )}
           </Svg>
         </Animated.View>
-
-        {/* 装饰品 - 光环 */}
-        {unlockedItems.includes("aura_rainbow") && (
-          <Animated.View
-            style={[
-              styles.aura,
-              { transform: [{ translateY: bounceAnim }] },
-            ]}
-          >
-            <Text style={styles.auraEmoji}>🌈</Text>
-          </Animated.View>
-        )}
-
-        {/* 星星轨迹 */}
-        {unlockedItems.includes("trail_stars") && (
-          <Animated.View
-            style={[
-              styles.stars,
-              {
-                transform: [{ translateY: bounceAnim }],
-                opacity: glowAnim,
-              },
-            ]}
-          >
-            <Text style={styles.starEmoji}>✨</Text>
-          </Animated.View>
-        )}
 
         {/* 对话气泡 */}
         {showSpeech && (
