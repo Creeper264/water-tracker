@@ -215,6 +215,9 @@ const PetCharacter: React.FC<PetCharacterProps> = ({
   // 随机游走动画
   useEffect(() => {
     let isMounted = true;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let currentAnimation: Animated.CompositeAnimation | null = null;
+
     const animate = () => {
       if (!isMounted) return;
 
@@ -237,24 +240,36 @@ const PetCharacter: React.FC<PetCharacterProps> = ({
       const distance = Math.abs(targetX - currentX);
       const duration = Math.max(2000, distance * 8); // 最少2秒
 
-      Animated.timing(wanderAnimX, {
+      currentAnimation = Animated.timing(wanderAnimX, {
         toValue: targetX,
         duration,
         easing: Easing.inOut(Easing.sin),
         useNativeDriver: true,
-      }).start(() => {
+      });
+
+      currentAnimation.start(({ finished }) => {
+        currentAnimation = null;
         // 等待随机时间后继续移动
-        const waitTime = 1500 + Math.random() * 3000;
-        setTimeout(animate, waitTime);
+        if (finished && isMounted) {
+          const waitTime = 1500 + Math.random() * 3000;
+          timeoutId = setTimeout(animate, waitTime);
+        }
       });
     };
 
     // 初始延迟后开始游走
-    const initialDelay = setTimeout(animate, 1000);
+    timeoutId = setTimeout(animate, 1000);
 
     return () => {
       isMounted = false;
-      clearTimeout(initialDelay);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+      if (currentAnimation) {
+        currentAnimation.stop();
+        currentAnimation = null;
+      }
     };
   }, [size]);
 

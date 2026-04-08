@@ -90,26 +90,9 @@ const PetLottie: React.FC<PetLottieProps> = ({
   }, [state]);
 
   // Lottie 动画源映射
-  const getAnimationSource = () => {
-    // 这里使用简单的 JSON 占位符
-    // 实际使用时应该从 LottieFiles 下载真实的动画 JSON
-    switch (state) {
-      case "dying":
-        return require("../assets/animations/pet-sad.json");
-      case "dehydrated":
-        return require("../assets/animations/pet-thirsty.json");
-      case "normal":
-        return require("../assets/animations/pet-idle.json");
-      case "good":
-        return require("../assets/animations/pet-good.json");
-      case "happy":
-        return require("../assets/animations/pet-happy.json");
-      case "overflow":
-        return require("../assets/animations/pet-swim.json");
-      default:
-        return require("../assets/animations/pet-idle.json");
-    }
-  };
+  // 注意：需要实际的 Lottie JSON 文件才能使用
+  // 当前使用 emoji 占位符代替，避免 require 不存在的文件导致闪退
+  // const getAnimationSource = () => { ... }
 
   return (
     <Animated.View

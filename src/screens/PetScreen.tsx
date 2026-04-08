@@ -6,6 +6,10 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import * as Notifications from "expo-notifications";
 import { StreakData, PetData, DailyLog, UserSettings } from "../types";
@@ -37,6 +41,8 @@ const PetScreen: React.FC<PetScreenProps> = ({ streakData, todayLog, settings })
   const [petData, setPetData] = useState<PetData | null>(null);
   const [editingName, setEditingName] = useState(false);
   const [specialLine, setSpecialLine] = useState<string | null>(null);
+  const [renameModalVisible, setRenameModalVisible] = useState(false);
+  const [newName, setNewName] = useState("");
   const notificationListener = useRef<Notifications.Subscription | null>(null);
 
   useEffect(() => {
@@ -50,8 +56,11 @@ const PetScreen: React.FC<PetScreenProps> = ({ streakData, todayLog, settings })
         const data = notification.request.content.data;
         // 检测久坐提醒通知
         if (data?.type === "sedentary") {
-          // 检查饮水进度是否 < 50%
-          const progress = getWaterProgress();
+          // 计算饮水进度百分比
+          const currentTotal = todayLog?.total ?? 0;
+          const dailyGoal = settings?.dailyGoal ?? 2000;
+          const progress = dailyGoal > 0 ? (currentTotal / dailyGoal) * 100 : 0;
+
           if (progress < 50) {
             // 随机选择一条特殊台词
             const randomIndex = Math.floor(Math.random() * SEDENTARY_SPECIAL_LINES.length);
@@ -64,9 +73,10 @@ const PetScreen: React.FC<PetScreenProps> = ({ streakData, todayLog, settings })
     return () => {
       if (notificationListener.current) {
         notificationListener.current.remove();
+        notificationListener.current = null;
       }
     };
-  }, [todayLog, settings]);
+  }, []); // 只在组件挂载时添加一次监听器
 
   // 计算饮水进度百分比
   const getWaterProgress = (): number => {
@@ -84,24 +94,17 @@ const PetScreen: React.FC<PetScreenProps> = ({ streakData, todayLog, settings })
     setPetData(data);
   };
 
-  const handleRename = async () => {
-    Alert.prompt(
-      "给宠物起个名字吧",
-      "输入新名字",
-      [
-        { text: "取消", style: "cancel" },
-        {
-          text: "确定",
-          onPress: async (name?: string) => {
-            if (name && name.trim()) {
-              await renamePet(name.trim());
-              loadPetData();
-            }
-          },
-        },
-      ],
-      "plain-text"
-    );
+  const handleRename = () => {
+    setNewName(petData?.name || "");
+    setRenameModalVisible(true);
+  };
+
+  const confirmRename = async () => {
+    if (newName.trim()) {
+      await renamePet(newName.trim());
+      loadPetData();
+    }
+    setRenameModalVisible(false);
   };
 
   if (!petData) {
@@ -119,6 +122,46 @@ const PetScreen: React.FC<PetScreenProps> = ({ streakData, todayLog, settings })
 
   return (
     <ScrollView style={styles.container}>
+      {/* 重命名模态框 */}
+      <Modal
+        visible={renameModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setRenameModalVisible(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>给宠物起个名字吧</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={newName}
+              onChangeText={setNewName}
+              placeholder="输入新名字"
+              placeholderTextColor="#8b8b8b"
+              autoFocus
+              maxLength={12}
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonCancel]}
+                onPress={() => setRenameModalVisible(false)}
+              >
+                <Text style={styles.modalButtonTextCancel}>取消</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonConfirm]}
+                onPress={confirmRename}
+              >
+                <Text style={styles.modalButtonTextConfirm}>确定</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
       {/* 特殊台词提示 */}
       {specialLine && (
         <View style={styles.specialLineContainer}>
@@ -430,6 +473,61 @@ const styles = StyleSheet.create({
     color: "#8b8b8b",
     marginTop: 4,
     textAlign: "center",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#2d2d44",
+    borderRadius: 16,
+    padding: 24,
+    width: "80%",
+    maxWidth: 300,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#ffffff",
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  modalInput: {
+    backgroundColor: "#1a1a2e",
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: "#ffffff",
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  modalButtonCancel: {
+    backgroundColor: "#1a1a2e",
+  },
+  modalButtonConfirm: {
+    backgroundColor: "#4FC3F7",
+  },
+  modalButtonTextCancel: {
+    color: "#8b8b8b",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  modalButtonTextConfirm: {
+    color: "#1a1a2e",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 

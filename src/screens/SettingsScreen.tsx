@@ -371,7 +371,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>关于</Text>
         <Text style={styles.aboutText}>
-          Water Tracker v1.3.0{"\n"}
+          Water Tracker v1.3.1{"\n"}
           保持水分，保持健康！{"\n\n"}
           连续打卡可以解锁像素小人的专属装扮 ✨
         </Text>
