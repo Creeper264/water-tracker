@@ -22,6 +22,10 @@ export interface UserSettings {
   sedentaryIntervalMinutes: number;
   sedentaryStartHour: number;
   sedentaryEndHour: number;
+  // v2.0.0: Theme & Customization
+  theme: AppTheme;
+  hapticFeedbackEnabled: boolean;
+  customQuickButtons: QuickButton[];
 }
 
 export interface WeeklyStats {
@@ -77,3 +81,59 @@ export const LEVEL_TITLES: Record<number, string> = {
   45: "水神",
   50: "水之至尊",
 };
+
+// v1.4.0: Pixel Art System
+export type PixelCode = string; // 调色盘索引（如 'S' 代表皮肤色）
+export type PixelFrame = PixelCode[][]; // 单帧像素数据（二维数组）
+export type Palette = Record<PixelCode, string | null>; // 调色盘映射（索引 -> 颜色）
+
+// 动画配置
+export interface AnimationConfig {
+  frames: PixelFrame[]; // 帧序列
+  interval: number; // 帧间隔（毫秒）
+  loop: boolean; // 是否循环
+}
+
+// 宠物动画状态
+export interface PetAnimationState {
+  state: PetState;
+  animation: AnimationConfig;
+  decorations: PixelDecoration[];
+}
+
+// 像素装饰品
+export interface PixelDecoration {
+  id: string;
+  frames: PixelFrame[];
+  offset: { x: number; y: number }; // 相对于小人的偏移
+  anchor: "head" | "body" | "feet"; // 锚点位置
+}
+
+// 场景互动元素
+export interface InteractiveSceneElement {
+  id: string;
+  type: "window" | "plant" | "cup" | "computer" | "frame";
+  position: { x: number; y: number };
+  size: { width: number; height: number };
+  frames: PixelFrame[];
+  onInteract?: () => void;
+}
+
+// v2.0.0: Theme System
+export type AppTheme = 'dark' | 'light' | 'system';
+
+export interface ThemeColors {
+  background: string;
+  card: string;
+  text: string;
+  textSecondary: string;
+  accent: string;
+  border: string;
+}
+
+// v2.0.0: Custom Quick Buttons
+export interface QuickButton {
+  id: string;
+  amount: number;
+  order: number;
+}

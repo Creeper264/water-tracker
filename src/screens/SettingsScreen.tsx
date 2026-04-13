@@ -9,11 +9,13 @@ import {
   Switch,
   Alert,
 } from "react-native";
-import { UserSettings } from "../types";
+import { UserSettings, AppTheme } from "../types";
 import {
   requestNotificationPermissions,
   rescheduleAllActiveReminders,
 } from "../utils/notifications";
+import { useTheme } from "../contexts/ThemeContext";
+import { HapticsService } from "../utils/haptics";
 
 interface SettingsScreenProps {
   settings: UserSettings | null;
@@ -24,6 +26,8 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
   settings,
   onUpdateSettings,
 }) => {
+  const { theme, setTheme } = useTheme();
+
   // ── Water goal ──
   const [dailyGoal, setDailyGoal] = useState(
     settings?.dailyGoal?.toString() || "2000",
@@ -57,6 +61,11 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
     settings?.sedentaryEndHour?.toString() || "18",
   );
 
+  // ── v2.0.0: Theme & Haptics ──
+  const [hapticEnabled, setHapticEnabled] = useState(
+    settings?.hapticFeedbackEnabled ?? true,
+  );
+
   // Sync local form state whenever settings prop changes (async load)
   useEffect(() => {
     if (settings) {
@@ -69,6 +78,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
       setSedentaryInterval(settings.sedentaryIntervalMinutes.toString());
       setSedentaryStart(settings.sedentaryStartHour.toString());
       setSedentaryEnd(settings.sedentaryEndHour.toString());
+      setHapticEnabled(settings.hapticFeedbackEnabled ?? true);
     }
   }, [settings]);
 
@@ -87,6 +97,9 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
     sedentaryIntervalMinutes: parseInt(sedentaryInterval, 10) || 45,
     sedentaryStartHour: parseInt(sedentaryStart, 10) || 9,
     sedentaryEndHour: parseInt(sedentaryEnd, 10) || 18,
+    theme,
+    hapticFeedbackEnabled: hapticEnabled,
+    customQuickButtons: settings?.customQuickButtons ?? [],
     ...partial,
   });
 
@@ -212,6 +225,24 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
     await rescheduleAllActiveReminders(full);
     onUpdateSettings(newPartial);
     Alert.alert("保存成功", "久坐提醒设置已更新！");
+  };
+
+  // ────────────────────────────────────────────
+  //  v2.0.0: Theme & Haptics handlers
+  // ────────────────────────────────────────────
+
+  const handleThemeChange = async (newTheme: AppTheme) => {
+    await setTheme(newTheme);
+    HapticsService.light();
+    onUpdateSettings({ theme: newTheme });
+  };
+
+  const handleHapticToggle = (value: boolean) => {
+    setHapticEnabled(value);
+    onUpdateSettings({ hapticFeedbackEnabled: value });
+    if (value) {
+      HapticsService.light();
+    }
   };
 
   // ────────────────────────────────────────────
@@ -367,6 +398,53 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
         )}
       </View>
 
+      {/* ── v2.0.0: Theme & Customization ── */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>🎨 主题与个性化</Text>
+        
+        <Text style={styles.inputTitle}>主题模式</Text>
+        <View style={styles.themeRow}>
+          <TouchableOpacity
+            style={[styles.themeButton, theme === 'light' && styles.themeButtonActive]}
+            onPress={() => handleThemeChange('light')}
+          >
+            <Text style={[styles.themeButtonText, theme === 'light' && styles.themeButtonTextActive]}>
+              浅色
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.themeButton, theme === 'dark' && styles.themeButtonActive]}
+            onPress={() => handleThemeChange('dark')}
+          >
+            <Text style={[styles.themeButtonText, theme === 'dark' && styles.themeButtonTextActive]}>
+              深色
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.themeButton, theme === 'system' && styles.themeButtonActive]}
+            onPress={() => handleThemeChange('system')}
+          >
+            <Text style={[styles.themeButtonText, theme === 'system' && styles.themeButtonTextActive]}>
+              跟随系统
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.switchRow}>
+          <Text style={styles.switchLabel}>振动反馈</Text>
+          <Switch
+            value={hapticEnabled}
+            onValueChange={handleHapticToggle}
+            trackColor={{ false: "#2d2d44", true: "#4FC3F7" }}
+            thumbColor={hapticEnabled ? "#ffffff" : "#8b8b8b"}
+          />
+        </View>
+
+        <Text style={styles.hintText}>
+          💡 自定义快捷按钮功能即将推出，敬请期待！
+        </Text>
+      </View>
+
       {/* ── About ── */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>关于</Text>
@@ -463,6 +541,39 @@ const styles = StyleSheet.create({
   timeSeparator: {
     color: "#8b8b8b",
     marginHorizontal: 15,
+  },
+  themeRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 15,
+    gap: 10,
+  },
+  themeButton: {
+    flex: 1,
+    backgroundColor: "#1a1a2e",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#3d3d5c",
+  },
+  themeButtonActive: {
+    backgroundColor: "#4FC3F7",
+    borderColor: "#4FC3F7",
+  },
+  themeButtonText: {
+    color: "#8b8b8b",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  themeButtonTextActive: {
+    color: "#1a1a2e",
+  },
+  hintText: {
+    color: "#8b8b8b",
+    fontSize: 13,
+    marginTop: 10,
+    textAlign: "center",
   },
   aboutText: {
     color: "#8b8b8b",

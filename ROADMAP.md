@@ -226,21 +226,58 @@ npx eas credentials   # 查看当前 Keystore 状态
 ## 6. 功能路线图总览
 
 ```
-v1.0.0 (当前)
+v1.0.0
   ✓ 今日饮水记录
   ✓ 进度圆环展示
   ✓ 周/月统计图表
   ✓ 饮水定时提醒
   ✓ AsyncStorage 持久化
 
-v1.1.0 (下一版本)
-  → 久坐提醒功能
+v1.1.0
+  ✓ 久坐提醒功能
+  ✓ 连续打卡系统
+  ✓ 宠物成长系统
 
 v1.2.0
-  → 像素小人摸鱼空间（基础版）
+  ✓ 像素小人摸鱼空间（基础版）
+  ✓ 场景背景渲染
 
 v1.3.0
-  → 像素小人解锁系统 + 摸鱼迷你小游戏
+  ✓ 像素小人解锁系统
+  ✓ 装饰品系统
+  ✓ 宠物重命名
+
+v1.4.0 (2026-04-13)
+  ✓ 像素风格重构
+    - 像素精灵帧动画系统（PixelSprite + PixelAnimation）
+    - 像素装饰品组件（PixelDecoration）
+    - 可交互场景元素（InteractiveElement）
+    - 场景互动系统（窗户切换白天/黑夜、绿植生长、杯子喝水、电脑工作、画框切换）
+    - 宠物空间页面集成 PixelScene + PetCharacter
+
+v2.0.0 (当前版本 - 2026-04-13)
+  ✓ 稳定性修复
+    - PixelSprite.tsx 空值检查和数组验证
+    - PixelAnimation.tsx 安全访问保护
+    - PetCharacter.tsx 默认值处理
+    - PixelScene.tsx 边界检查（防止除零错误）
+  ✓ 声音/振动反馈
+    - 创建 HapticsService 工具类
+    - 快捷按钮点击振动反馈
+    - 目标完成庆祝振动
+  ✓ 主题切换功能
+    - 深色/浅色/跟随系统三种主题
+    - ThemeContext 上下文管理
+    - 设置页面主题切换 UI
+  ✓ 自定义快捷按钮
+    - UserSettings 新增 customQuickButtons 字段
+    - HomeScreen 支持自定义按钮渲染
+    - 向后兼容默认按钮
+
+v2.1.0 (下一版本)
+  → 成就徽章系统
+  → 年度统计与趋势分析
+  → 新手引导流程
 ```
 
 ---
@@ -725,4 +762,262 @@ Week 3
 
 ---
 
-*文档最后更新：WaterTracker v1.0.0 bug 修复完成后*
+## 10. v1.4.0 像素风格重构记录
+
+### 10.1 重构目标
+
+将现有的 Circle + RadialGradient 渲染替换为真正的像素风格渲染系统，实现：
+- 清晰的像素网格边界
+- 逐帧跳跃式动画（无插值过渡）
+- 像素风格的装饰品图形
+- 与场景元素的互动反馈
+
+### 10.2 技术实现
+
+**新增文件：**
+
+| 文件路径 | 功能描述 |
+|---------|---------|
+| `src/types/index.ts` | 新增 PixelFrame、Palette、AnimationConfig 等类型定义 |
+| `src/utils/spriteFrames.ts` | 调色盘和小人各状态的帧动画数据（dying/dehydrated/normal/good/happy/overflow） |
+| `src/utils/decorationSprites.ts` | 所有装饰品的像素版本数据（帽子、光环等） |
+| `src/utils/sceneElements.ts` | 场景元素的像素帧数据（窗户、绿植、杯子、电脑、画框） |
+| `src/components/pixel/PixelSprite.tsx` | 像素精灵渲染器，接收帧数据和调色盘，批量渲染 SVG Rect |
+| `src/components/pixel/PixelAnimation.tsx` | 帧动画控制器，管理帧序列、切换间隔、循环模式 |
+| `src/components/pixel/PixelDecoration.tsx` | 像素装饰品组件，支持位置偏移和独立动画 |
+| `src/components/pixel/InteractiveElement.tsx` | 可交互场景元素，封装 TouchableOpacity + 像素图形 + 点击反馈动画 |
+
+**重构文件：**
+
+| 文件路径 | 改动描述 |
+|---------|---------|
+| `src/components/PetCharacter.tsx` | 替换 Circle + RadialGradient 为 PixelAnimation，替换 emoji 装饰品为 PixelDecoration |
+| `src/components/PixelScene.tsx` | 添加可交互元素（窗户、绿植、杯子、电脑、画框），支持白天/黑夜切换 |
+| `src/screens/PetScreen.tsx` | 集成 PixelScene 作为背景，添加 PetCharacter 作为互动元素 |
+
+### 10.3 像素精灵系统架构
+
+```typescript
+// 核心类型定义
+type PixelCode = string;           // 调色盘索引（如 'S' = 皮肤色）
+type PixelFrame = PixelCode[][];   // 单帧像素数据（二维数组）
+type Palette = Record<PixelCode, string | null>;  // 调色盘映射
+
+interface AnimationConfig {
+  frames: PixelFrame[];  // 帧序列
+  interval: number;      // 帧间隔(ms)
+  loop: boolean;         // 是否循环
+}
+```
+
+**渲染原理：**
+- 使用 SVG Rect 批量渲染每个像素点
+- 每个 Rect 尺寸为 pixelSize × pixelSize（默认 8x8 物理像素）
+- 非透明像素点才渲染（palette[code] !== null）
+- 使用 React.memo 缓存静态帧，避免重复渲染
+
+**动画驱动：**
+- 使用 setInterval 驱动帧切换
+- 固定帧率（8-12 FPS），无插值过渡
+- 位置移动采用整数像素跳跃
+
+### 10.4 场景互动系统
+
+| 元素 | 交互方式 | 效果 |
+|------|---------|------|
+| 窗户 | 点击切换 | 白天 ↔ 黑夜，整体色调变化 |
+| 绿植 | 点击触发 | 生长动画（3 帧序列） |
+| 杯子 | 点击触发 | 喝水动画（水位下降） |
+| 电脑 | 点击切换 | 工作动画（屏幕闪烁） |
+| 画框 | 点击切换 | 随机更换画框内容（3 种图案） |
+
+### 10.5 性能优化
+
+- **帧数据缓存**：使用 React.memo 缓存 PixelSprite 组件
+- **按需渲染**：仅渲染非透明像素点
+- **内存管理**：帧数据按状态分组，未激活状态不加载
+- **动画优化**：位置动画使用 useNativeDriver: true，帧切换保持在 JS 线程
+
+### 10.6 实现检查清单
+
+- [x] `src/types/index.ts` 新增像素相关类型定义
+- [x] `src/utils/spriteFrames.ts` 定义调色盘和小人各状态帧数据
+- [x] `src/components/pixel/PixelSprite.tsx` 像素精灵渲染器
+- [x] `src/components/pixel/PixelAnimation.tsx` 帧动画控制器
+- [x] `src/utils/decorationSprites.ts` 装饰品像素数据
+- [x] `src/components/pixel/PixelDecoration.tsx` 像素装饰品组件
+- [x] `src/components/PetCharacter.tsx` 重构为像素风格
+- [x] `src/components/pixel/InteractiveElement.tsx` 可交互场景元素
+- [x] `src/utils/sceneElements.ts` 场景元素帧数据
+- [x] `src/components/PixelScene.tsx` 添加可交互元素
+- [x] `src/screens/PetScreen.tsx` 集成像素组件系统
+- [x] `ROADMAP.md` 更新版本记录
+
+---
+
+## 11. v2.0.0 稳定性修复与新功能记录
+
+### 11.1 稳定性修复
+
+修复 v1.4.0 引入的潜在闪退风险点，采用防御性编程模式：
+
+**修复文件清单：**
+
+| 文件路径 | 风险点 | 修复方案 |
+|---------|-------|---------|
+| `src/components/pixel/PixelSprite.tsx` | frame 为 undefined/null 时崩溃 | 添加空值检查和数组验证，返回默认值 { width: 0, height: 0 } |
+| `src/components/pixel/PixelAnimation.tsx` | frames 为空数组或 undefined 时崩溃 | 添加安全访问，返回空帧 [[]] 作为默认值 |
+| `src/components/PetCharacter.tsx` | DECORATION_SPRITES[id] 或 PET_ANIMATIONS[state] 不存在时崩溃 | 使用 nullish coalescing (??) 提供默认值 |
+| `src/components/PixelScene.tsx` | width 为 0 时除零错误 | 添加 Math.max(width, 1) 防止除零 |
+
+**防御性编程模式：**
+
+```typescript
+// 空值检查 + 数组验证
+if (!frame || !Array.isArray(frame) || frame.length === 0) {
+  return { width: 0, height: 0 };
+}
+
+// 安全访问 + 默认值
+const currentAnimation = PET_ANIMATIONS[state] ?? PET_ANIMATIONS.normal ?? { frames: [[]], fps: 1, loop: true };
+
+// 边界检查
+const scale = Math.max(width, 1) / 400;
+```
+
+### 11.2 振动反馈功能
+
+使用 expo-haptics（Expo SDK 内置）实现触觉反馈，无需额外安装依赖。
+
+**新增文件：**
+
+| 文件路径 | 功能描述 |
+|---------|---------|
+| `src/utils/haptics.ts` | 振动反馈工具类，封装 6 种反馈类型 |
+
+**反馈类型：**
+
+| 方法 | 用途 | 触发场景 |
+|------|------|---------|
+| `light()` | 轻触反馈 | 快捷按钮点击 |
+| `medium()` | 中等强度 | 重要操作 |
+| `heavy()` | 重度反馈 | 关键操作 |
+| `success()` | 成功反馈 | 目标完成 |
+| `error()` | 错误反馈 | 操作失败 |
+| `warning()` | 警告反馈 | 提醒用户注意 |
+
+**集成位置：**
+
+- `HomeScreen.tsx`: WaterButton onPress 触发 light() 反馈
+- `HomeScreen.tsx`: 目标完成时触发 success() 反馈（通过 prevTotalRef 检测）
+
+### 11.3 主题切换功能
+
+支持深色/浅色/跟随系统三种主题模式，使用 React Context 管理主题状态。
+
+**新增文件：**
+
+| 文件路径 | 功能描述 |
+|---------|---------|
+| `src/utils/theme.ts` | 主题配置（深色/浅色调色盘）和切换逻辑 |
+| `src/contexts/ThemeContext.tsx` | 主题上下文提供者，管理主题状态和持久化 |
+
+**主题调色盘：**
+
+```typescript
+// 深色主题
+const DARK_THEME: ThemeColors = {
+  background: '#1a1a2e',
+  card: '#2d2d44',
+  text: '#ffffff',
+  textSecondary: '#a0a0b0',
+  accent: '#4FC3F7',
+  border: '#3d3d5c',
+};
+
+// 浅色主题
+const LIGHT_THEME: ThemeColors = {
+  background: '#f5f5f5',
+  card: '#ffffff',
+  text: '#1a1a2e',
+  textSecondary: '#666666',
+  accent: '#0288d1',
+  border: '#e0e0e0',
+};
+```
+
+**集成位置：**
+
+- `src/index.tsx`: 包裹 ThemeProvider
+- `src/screens/SettingsScreen.tsx`: 主题切换 UI（深色/浅色/跟随系统三个按钮）
+
+### 11.4 自定义快捷按钮功能
+
+允许用户自定义快捷添加按钮的容量，支持添加/删除/排序。
+
+**数据结构：**
+
+```typescript
+interface QuickButton {
+  id: string;
+  amount: number;
+  order: number;
+}
+
+// UserSettings 新增字段
+customQuickButtons: QuickButton[];
+```
+
+**默认值处理：**
+
+```typescript
+// 获取快捷按钮列表（自定义或默认）
+const quickButtons = settings?.customQuickButtons && settings.customQuickButtons.length > 0
+  ? settings.customQuickButtons.sort((a, b) => a.order - b.order)
+  : presets.map((amount, index) => ({ id: `default-${index}`, amount, order: index }));
+```
+
+**集成位置：**
+
+- `src/types/index.ts`: 新增 QuickButton 类型定义
+- `src/utils/storage.ts`: DEFAULT_SETTINGS 新增 customQuickButtons: []
+- `src/screens/HomeScreen.tsx`: 支持自定义按钮渲染
+
+### 11.5 向后兼容性保证
+
+**数据迁移策略：**
+
+- 新字段提供默认值，旧数据自动合并
+- `getSettings()` 使用展开运算符合并默认值：`{ ...DEFAULT_SETTINGS, ...JSON.parse(data) }`
+- 自定义按钮为空数组时使用默认预设按钮
+
+**版本升级路径：**
+
+```
+v1.4.0 → v2.0.0
+  - 自动添加 theme: 'dark'
+  - 自动添加 hapticFeedbackEnabled: true
+  - 自动添加 customQuickButtons: []
+  - 无需用户手动迁移
+```
+
+### 11.6 实现检查清单
+
+- [x] PixelSprite.tsx 空值检查和数组验证
+- [x] PixelAnimation.tsx 安全访问保护
+- [x] PetCharacter.tsx 默认值处理
+- [x] PixelScene.tsx 边界检查
+- [x] src/types/index.ts 新增 AppTheme、ThemeColors、QuickButton 类型
+- [x] src/utils/haptics.ts 振动反馈工具类
+- [x] src/utils/theme.ts 主题配置和切换逻辑
+- [x] src/utils/storage.ts DEFAULT_SETTINGS 新增字段
+- [x] src/contexts/ThemeContext.tsx 主题上下文提供者
+- [x] HomeScreen.tsx 集成振动反馈
+- [x] HomeScreen.tsx 支持自定义快捷按钮
+- [x] SettingsScreen.tsx 主题切换 UI
+- [x] src/index.tsx 包裹 ThemeProvider
+- [x] ROADMAP.md 更新版本记录
+
+---
+
+*文档最后更新：WaterTracker v2.0.0 稳定性修复与新功能完成后（2026-04-13）*

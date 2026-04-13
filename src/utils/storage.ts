@@ -18,6 +18,10 @@ const DEFAULT_SETTINGS: UserSettings = {
   sedentaryIntervalMinutes: 45,
   sedentaryStartHour: 9,
   sedentaryEndHour: 18,
+  // v2.0.0 theme & customization defaults
+  theme: 'dark',
+  hapticFeedbackEnabled: true,
+  customQuickButtons: [],
 };
 
 const DEFAULT_STREAK: StreakData = {

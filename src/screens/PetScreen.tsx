@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -10,9 +10,10 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
 } from "react-native";
 import * as Notifications from "expo-notifications";
-import { StreakData, PetData, DailyLog, UserSettings } from "../types";
+import { StreakData, PetData, DailyLog, UserSettings, PetState } from "../types";
 import { getStreakData } from "../utils/storage";
 import {
   getPetData,
@@ -21,6 +22,11 @@ import {
   renamePet,
 } from "../utils/petStorage";
 import { getNextUnlock, getUnlockProgress, DECORATIONS } from "../utils/decorations";
+import PetCharacter from "../components/PetCharacter";
+import PixelScene from "../components/PixelScene";
+import { calculatePetState } from "../utils/petState";
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 interface PetScreenProps {
   streakData: StreakData | null;
@@ -28,7 +34,6 @@ interface PetScreenProps {
   settings: UserSettings | null;
 }
 
-// 特殊台词配置
 const SEDENTARY_SPECIAL_LINES = [
   "提醒你起来活动！顺便去喝点水，我都要渴死了！",
   "别坐着啦！快去喝杯水，我的喉咙都冒烟了！",
@@ -43,26 +48,23 @@ const PetScreen: React.FC<PetScreenProps> = ({ streakData, todayLog, settings })
   const [specialLine, setSpecialLine] = useState<string | null>(null);
   const [renameModalVisible, setRenameModalVisible] = useState(false);
   const [newName, setNewName] = useState("");
+  const [isNight, setIsNight] = useState(false);
   const notificationListener = useRef<Notifications.Subscription | null>(null);
 
   useEffect(() => {
     loadPetData();
   }, []);
 
-  // 监听久坐提醒通知
   useEffect(() => {
     notificationListener.current = Notifications.addNotificationReceivedListener(
       (notification) => {
         const data = notification.request.content.data;
-        // 检测久坐提醒通知
         if (data?.type === "sedentary") {
-          // 计算饮水进度百分比
           const currentTotal = todayLog?.total ?? 0;
           const dailyGoal = settings?.dailyGoal ?? 2000;
           const progress = dailyGoal > 0 ? (currentTotal / dailyGoal) * 100 : 0;
 
           if (progress < 50) {
-            // 随机选择一条特殊台词
             const randomIndex = Math.floor(Math.random() * SEDENTARY_SPECIAL_LINES.length);
             setSpecialLine(SEDENTARY_SPECIAL_LINES[randomIndex]);
           }
@@ -73,21 +75,16 @@ const PetScreen: React.FC<PetScreenProps> = ({ streakData, todayLog, settings })
     return () => {
       if (notificationListener.current) {
         notificationListener.current.remove();
-        notificationListener.current = null;
+        notificationListener = null;
       }
     };
-  }, []); // 只在组件挂载时添加一次监听器
+  }, []);
 
-  // 计算饮水进度百分比
-  const getWaterProgress = (): number => {
-    if (!todayLog || !settings) return 0;
-    return (todayLog.total / settings.dailyGoal) * 100;
-  };
-
-  // 关闭特殊台词
-  const dismissSpecialLine = () => {
-    setSpecialLine(null);
-  };
+  const petState = useMemo<PetState>(() => {
+    const total = todayLog?.total ?? 0;
+    const goal = settings?.dailyGoal ?? 2000;
+    return calculatePetState(total, goal);
+  }, [todayLog, settings]);
 
   const loadPetData = async () => {
     const data = await getPetData();
@@ -107,6 +104,14 @@ const PetScreen: React.FC<PetScreenProps> = ({ streakData, todayLog, settings })
     setRenameModalVisible(false);
   };
 
+  const dismissSpecialLine = () => {
+    setSpecialLine(null);
+  };
+
+  const handleWindowToggle = (night: boolean) => {
+    setIsNight(night);
+  };
+
   if (!petData) {
     return (
       <View style={styles.container}>
@@ -121,8 +126,7 @@ const PetScreen: React.FC<PetScreenProps> = ({ streakData, todayLog, settings })
   const unlockProgress = streakData ? getUnlockProgress(streakData.currentStreak) : { progress: 0 };
 
   return (
-    <ScrollView style={styles.container}>
-      {/* 重命名模态框 */}
+    <View style={styles.container}>
       <Modal
         visible={renameModalVisible}
         transparent
@@ -162,7 +166,6 @@ const PetScreen: React.FC<PetScreenProps> = ({ streakData, todayLog, settings })
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* 特殊台词提示 */}
       {specialLine && (
         <View style={styles.specialLineContainer}>
           <View style={styles.specialLineCard}>
@@ -175,107 +178,128 @@ const PetScreen: React.FC<PetScreenProps> = ({ streakData, todayLog, settings })
         </View>
       )}
 
-      {/* 宠物信息卡片 */}
-      <View style={styles.petCard}>
-        <TouchableOpacity onPress={handleRename}>
-          <Text style={styles.petName}>{petData.name}</Text>
-          <Text style={styles.renameHint}>点击改名</Text>
-        </TouchableOpacity>
-        <Text style={styles.levelTitle}>{levelTitle}</Text>
-      </View>
-
-      {/* 等级进度 */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>等级进度</Text>
-        <View style={styles.levelRow}>
-          <Text style={styles.levelText}>Lv.{petData.level}</Text>
-          <Text style={styles.expText}>
-            {petData.experience}/{getExpRequired(petData.level)} EXP
-          </Text>
-        </View>
-        <View style={styles.progressBar}>
-          <View
-            style={[styles.progressFill, { width: `${levelProgress}%` }]}
+      <View style={styles.sceneContainer}>
+        <PixelScene
+          width={SCREEN_WIDTH}
+          height={SCREEN_HEIGHT * 0.45}
+          interactions={{
+            onWindowToggle: handleWindowToggle,
+            onPlantGrow: () => console.log("Plant grow"),
+            onCupDrink: () => console.log("Cup drink"),
+            onComputerWork: () => console.log("Computer work"),
+            onFrameChange: (index) => console.log("Frame change:", index),
+          }}
+          showInteractiveElements={true}
+        />
+        
+        <View style={styles.petOverlay}>
+          <PetCharacter
+            state={petState}
+            size={120}
+            unlockedItems={streakData?.unlockedItems || []}
+            onPress={handleRename}
+            showSpeech={true}
           />
         </View>
-        <Text style={styles.progressText}>{levelProgress.toFixed(1)}%</Text>
       </View>
 
-      {/* 统计数据 */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>统计数据</Text>
-        <View style={styles.statsGrid}>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>
-              {petData.totalWaterDrank.toLocaleString()}
-            </Text>
-            <Text style={styles.statLabel}>总喝水 (ml)</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>
-              {streakData?.currentStreak || 0}
-            </Text>
-            <Text style={styles.statLabel}>连续打卡</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>
-              {streakData?.longestStreak || 0}
-            </Text>
-            <Text style={styles.statLabel}>最长连续</Text>
-          </View>
+      <ScrollView style={styles.infoContainer} contentContainerStyle={styles.infoContent}>
+        <View style={styles.petCard}>
+          <TouchableOpacity onPress={handleRename}>
+            <Text style={styles.petName}>{petData.name}</Text>
+            <Text style={styles.renameHint}>点击改名</Text>
+          </TouchableOpacity>
+          <Text style={styles.levelTitle}>{levelTitle}</Text>
         </View>
-      </View>
 
-      {/* 解锁进度 */}
-      {nextUnlock && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>下一个解锁</Text>
-          <View style={styles.unlockCard}>
-            <Text style={styles.unlockEmoji}>{nextUnlock.emoji}</Text>
-            <View style={styles.unlockInfo}>
-              <Text style={styles.unlockName}>{nextUnlock.name}</Text>
-              <Text style={styles.unlockDesc}>{nextUnlock.description}</Text>
-              <View style={styles.unlockProgress}>
-                <View style={styles.unlockProgressBar}>
-                  <View
-                    style={[
-                      styles.unlockProgressFill,
-                      { width: `${unlockProgress.progress}%` },
-                    ]}
-                  />
-                </View>
-                <Text style={styles.unlockProgressText}>
-                  {streakData?.currentStreak || 0}/{nextUnlock.requiredDays} 天
-                </Text>
-              </View>
+          <Text style={styles.sectionTitle}>等级进度</Text>
+          <View style={styles.levelRow}>
+            <Text style={styles.levelText}>Lv.{petData.level}</Text>
+            <Text style={styles.expText}>
+              {petData.experience}/{getExpRequired(petData.level)} EXP
+            </Text>
+          </View>
+          <View style={styles.progressBar}>
+            <View
+              style={[styles.progressFill, { width: `${levelProgress}%` }]}
+            />
+          </View>
+          <Text style={styles.progressText}>{levelProgress.toFixed(1)}%</Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>统计数据</Text>
+          <View style={styles.statsGrid}>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>
+                {petData.totalWaterDrank.toLocaleString()}
+              </Text>
+              <Text style={styles.statLabel}>总喝水 (ml)</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>
+                {streakData?.currentStreak || 0}
+              </Text>
+              <Text style={styles.statLabel}>连续打卡</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>
+                {streakData?.longestStreak || 0}
+              </Text>
+              <Text style={styles.statLabel}>最长连续</Text>
             </View>
           </View>
         </View>
-      )}
 
-      {/* 已解锁装饰品 */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          已解锁装饰品 ({streakData?.unlockedItems?.length || 0})
-        </Text>
-        <View style={styles.decorationsGrid}>
-          {(streakData?.unlockedItems || []).map((itemId) => {
-            const decoration = DECORATIONS.find((d) => d.id === itemId);
-            if (!decoration) return null;
-            return (
-              <View key={itemId} style={styles.decorationItem}>
-                <Text style={styles.decorationEmoji}>{decoration.emoji}</Text>
-                <Text style={styles.decorationName}>{decoration.name}</Text>
+        {nextUnlock && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>下一个解锁</Text>
+            <View style={styles.unlockCard}>
+              <Text style={styles.unlockEmoji}>{nextUnlock.emoji}</Text>
+              <View style={styles.unlockInfo}>
+                <Text style={styles.unlockName}>{nextUnlock.name}</Text>
+                <Text style={styles.unlockDesc}>{nextUnlock.description}</Text>
+                <View style={styles.unlockProgress}>
+                  <View style={styles.unlockProgressBar}>
+                    <View
+                      style={[
+                        styles.unlockProgressFill,
+                        { width: `${unlockProgress.progress}%` },
+                      ]}
+                    />
+                  </View>
+                  <Text style={styles.unlockProgressText}>
+                    {streakData?.currentStreak || 0}/{nextUnlock.requiredDays} 天
+                  </Text>
+                </View>
               </View>
-            );
-          })}
+            </View>
+          </View>
+        )}
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
+            已解锁装饰品 ({streakData?.unlockedItems?.length || 0})
+          </Text>
+          <View style={styles.decorationsGrid}>
+            {(streakData?.unlockedItems || []).map((itemId) => {
+              const decoration = DECORATIONS.find((d) => d.id === itemId);
+              if (!decoration) return null;
+              return (
+                <View key={itemId} style={styles.decorationItem}>
+                  <Text style={styles.decorationEmoji}>{decoration.emoji}</Text>
+                  <Text style={styles.decorationName}>{decoration.name}</Text>
+                </View>
+              );
+            })}
+          </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
-// Helper function
 const getExpRequired = (level: number): number => {
   return Math.floor(100 * Math.pow(1.5, level - 1));
 };
@@ -291,9 +315,29 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 50,
   },
+  sceneContainer: {
+    position: "relative",
+    height: SCREEN_HEIGHT * 0.45,
+  },
+  petOverlay: {
+    position: "absolute",
+    bottom: 40,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+  },
+  infoContainer: {
+    flex: 1,
+  },
+  infoContent: {
+    paddingBottom: 20,
+  },
   specialLineContainer: {
-    margin: 16,
-    marginBottom: 0,
+    position: "absolute",
+    top: 16,
+    left: 16,
+    right: 16,
+    zIndex: 100,
   },
   specialLineCard: {
     backgroundColor: "#FF8C00",

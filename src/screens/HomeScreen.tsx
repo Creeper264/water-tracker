@@ -13,6 +13,7 @@ import { DailyLog, UserSettings, StreakData } from "../types";
 import PetCharacter from "../components/PetCharacter";
 import { calculatePetState } from "../utils/petState";
 import { getStreakData } from "../utils/storage";
+import { HapticsService } from "../utils/haptics";
 
 const { width } = Dimensions.get("window");
 const CIRCLE_SIZE = width * 0.7;
@@ -81,11 +82,19 @@ interface WaterButtonProps {
   onPress: () => void;
 }
 
-const WaterButton: React.FC<WaterButtonProps> = ({ amount, onPress }) => (
-  <TouchableOpacity style={styles.waterButton} onPress={onPress}>
-    <Text style={styles.waterButtonText}>{amount} ml</Text>
-  </TouchableOpacity>
-);
+const WaterButton: React.FC<WaterButtonProps> = ({ amount, onPress }) => {
+  const handlePress = () => {
+    // 点击按钮时播放轻触振动
+    HapticsService.light();
+    onPress();
+  };
+  
+  return (
+    <TouchableOpacity style={styles.waterButton} onPress={handlePress}>
+      <Text style={styles.waterButtonText}>{amount} ml</Text>
+    </TouchableOpacity>
+  );
+};
 
 interface HomeScreenProps {
   todayLog: DailyLog | null;
@@ -102,10 +111,16 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 }) => {
   const [streakData, setStreakData] = useState<StreakData | null>(null);
   const celebrationAnim = useRef(new Animated.Value(0)).current;
+  const prevTotalRef = useRef(0); // 用于检测目标完成
 
   const presets = [250, 500, 750, 1000];
   const total = todayLog?.total || 0;
   const goal = settings?.dailyGoal || 2000;
+
+  // 获取快捷按钮列表（自定义或默认）
+  const quickButtons = settings?.customQuickButtons && settings.customQuickButtons.length > 0
+    ? settings.customQuickButtons.sort((a, b) => a.order - b.order)
+    : presets.map((amount, index) => ({ id: `default-${index}`, amount, order: index }));
 
   const petState = calculatePetState(total, goal);
 
@@ -116,6 +131,15 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     };
     loadStreak();
   }, [todayLog]);
+
+  // 检测目标完成，触发庆祝振动
+  useEffect(() => {
+    if (total >= goal && prevTotalRef.current < goal) {
+      // 目标刚刚完成，播放成功振动
+      HapticsService.success();
+    }
+    prevTotalRef.current = total;
+  }, [total, goal]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -166,11 +190,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 
       <Text style={styles.sectionTitle}>Quick Add</Text>
       <View style={styles.buttonRow}>
-        {presets.map((amount) => (
+        {quickButtons.map((button) => (
           <WaterButton
-            key={amount}
-            amount={amount}
-            onPress={() => onAddWater(amount)}
+            key={button.id}
+            amount={button.amount}
+            onPress={() => onAddWater(button.amount)}
           />
         ))}
       </View>

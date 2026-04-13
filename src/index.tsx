@@ -10,6 +10,7 @@ import PetScreen from './screens/PetScreen';
 import { useWaterTracker } from './hooks/useWaterTracker';
 import { getStreakData } from './utils/storage';
 import { StreakData } from './types';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 const Tab = createBottomTabNavigator();
 
@@ -66,73 +67,75 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      <StatusBar style="light" />
-      <Tab.Navigator
-        screenOptions={{
-          tabBarStyle: styles.tabBar,
-          tabBarActiveTintColor: '#4FC3F7',
-          tabBarInactiveTintColor: '#8b8b8b',
-          headerStyle: styles.header,
-          headerTitleStyle: styles.headerTitle,
-        }}
-      >
-        <Tab.Screen
-          name="Home"
-          options={{
-            tabBarIcon: HomeIcon,
-            headerTitle: 'Water Tracker',
+    <ThemeProvider>
+      <NavigationContainer>
+        <StatusBar style="light" />
+        <Tab.Navigator
+          screenOptions={{
+            tabBarStyle: styles.tabBar,
+            tabBarActiveTintColor: '#4FC3F7',
+            tabBarInactiveTintColor: '#8b8b8b',
+            headerStyle: styles.header,
+            headerTitleStyle: styles.headerTitle,
           }}
         >
-          {() => (
-            <HomeScreen
-              todayLog={todayLog}
-              settings={settings}
-              onAddWater={addWater}
-              onRemoveEntry={removeEntry}
-            />
-          )}
-        </Tab.Screen>
-        <Tab.Screen
-          name="Pet"
-          options={{
-            tabBarIcon: PetIcon,
-            headerTitle: '宠物空间',
-          }}
-        >
-          {() => (
-            <PetScreen
-              streakData={streakData}
-              todayLog={todayLog}
-              settings={settings}
-            />
-          )}
-        </Tab.Screen>
-        <Tab.Screen
-          name="Stats"
-          options={{
-            tabBarIcon: StatsIcon,
-            headerTitle: 'Statistics',
-          }}
-        >
-          {() => <StatsScreen settings={settings} />}
-        </Tab.Screen>
-        <Tab.Screen
-          name="Settings"
-          options={{
-            tabBarIcon: SettingsIcon,
-            headerTitle: 'Settings',
-          }}
-        >
-          {() => (
-            <SettingsScreen
-              settings={settings}
-              onUpdateSettings={updateSettings}
-            />
-          )}
-        </Tab.Screen>
-      </Tab.Navigator>
-    </NavigationContainer>
+          <Tab.Screen
+            name="Home"
+            options={{
+              tabBarIcon: HomeIcon,
+              headerTitle: 'Water Tracker',
+            }}
+          >
+            {() => (
+              <HomeScreen
+                todayLog={todayLog}
+                settings={settings}
+                onAddWater={addWater}
+                onRemoveEntry={removeEntry}
+              />
+            )}
+          </Tab.Screen>
+          <Tab.Screen
+            name="Pet"
+            options={{
+              tabBarIcon: PetIcon,
+              headerTitle: '宠物空间',
+            }}
+          >
+            {() => (
+              <PetScreen
+                streakData={streakData}
+                todayLog={todayLog}
+                settings={settings}
+              />
+            )}
+          </Tab.Screen>
+          <Tab.Screen
+            name="Stats"
+            options={{
+              tabBarIcon: StatsIcon,
+              headerTitle: 'Statistics',
+            }}
+          >
+            {() => <StatsScreen settings={settings} />}
+          </Tab.Screen>
+          <Tab.Screen
+            name="Settings"
+            options={{
+              tabBarIcon: SettingsIcon,
+              headerTitle: 'Settings',
+            }}
+          >
+            {() => (
+              <SettingsScreen
+                settings={settings}
+                onUpdateSettings={updateSettings}
+              />
+            )}
+          </Tab.Screen>
+        </Tab.Navigator>
+      </NavigationContainer>
+    </ThemeProvider>
   );
 }
 
