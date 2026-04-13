@@ -11,8 +11,8 @@ import {
 import { PetState } from "../types";
 import { getPetStateMessage, getPetStateColor } from "../utils/petState";
 import { getDecorationById, Decoration } from "../utils/decorations";
-import { PixelAnimation } from "./pixel/PixelAnimation";
-import { PixelDecoration } from "./pixel/PixelDecoration";
+import PixelAnimation from "./pixel/PixelAnimation";
+import PixelDecoration from "./pixel/PixelDecoration";
 import { PET_ANIMATIONS } from "../utils/spriteFrames";
 import { DECORATION_SPRITES } from "../utils/decorationSprites";
 
