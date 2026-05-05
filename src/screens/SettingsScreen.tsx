@@ -25,6 +25,7 @@ import {
   recommendDailyGoalMl,
 } from "../utils/goalCalculator";
 import { exportDataViaShare } from "../utils/dataExport";
+import AchievementsScreen from "./AchievementsScreen";
 
 interface SettingsScreenProps {
   settings: UserSettings | null;
@@ -37,6 +38,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
 }) => {
   useLocale();
   const { theme, setTheme } = useTheme();
+  const [showAchievements, setShowAchievements] = useState(false);
 
   // ── Water goal ──
   const [dailyGoal, setDailyGoal] = useState(
@@ -331,6 +333,23 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
   // ────────────────────────────────────────────
   //  Render
   // ────────────────────────────────────────────
+
+  // Show Achievements screen if toggled
+  if (showAchievements) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.backHeader}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => setShowAchievements(false)}
+          >
+            <Text style={styles.backButtonText}>← {t("settings.title")}</Text>
+          </TouchableOpacity>
+        </View>
+        <AchievementsScreen navigation={null} />
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -651,6 +670,17 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
         </Text>
       </View>
 
+      {/* ── Achievements ── */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{t("settings.achievements")}</Text>
+        <TouchableOpacity
+          style={styles.saveButton}
+          onPress={() => setShowAchievements(true)}
+        >
+          <Text style={styles.saveButtonText}>{t("settings.achievements")}</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* ── Data Export ── */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t("settings.dataTitle")}</Text>
@@ -663,7 +693,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t("settings.about")}</Text>
         <Text style={styles.aboutText}>
-          Water Tracker v2.5.0{"\n"}
+          Water Tracker v2.6.0{"\n"}
           {t("app.about")}
         </Text>
       </View>
@@ -802,6 +832,23 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textAlign: "center",
     marginVertical: 12,
+  },
+  backHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    backgroundColor: "#1a1a2e",
+    borderBottomWidth: 1,
+    borderBottomColor: "#2d2d44",
+  },
+  backButton: {
+    paddingVertical: 8,
+    paddingRight: 20,
+  },
+  backButtonText: {
+    color: "#4FC3F7",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
 

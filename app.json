@@ -2,7 +2,7 @@
   "expo": {
     "name": "Water Tracker",
     "slug": "WaterTracker",
-    "version": "2.5.0",
+    "version": "2.6.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -21,7 +21,7 @@
         "backgroundColor": "#1a1a2e"
       },
       "package": "com.watertracker.app",
-      "versionCode": 10
+      "versionCode": 11
     },
     "web": {
       "favicon": "./assets/favicon.png"
