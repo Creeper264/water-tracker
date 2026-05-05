@@ -13,7 +13,7 @@ import {
   Dimensions,
 } from "react-native";
 import * as Notifications from "expo-notifications";
-import { StreakData, PetData, DailyLog, UserSettings, PetState, ThemeColors } from "../types";
+import { StreakData, PetData, DailyLog, UserSettings, PetState, ThemeColors, PetType } from "../types";
 import { getStreakData } from "../utils/storage";
 import { useTheme } from "../contexts/ThemeContext";
 import {
@@ -21,11 +21,14 @@ import {
   getLevelProgress,
   getLevelTitle,
   renamePet,
+  changePetType,
 } from "../utils/petStorage";
 import { getNextUnlock, getUnlockProgress, DECORATIONS } from "../utils/decorations";
 import PetCharacter from "../components/PetCharacter";
 import PixelScene from "../components/PixelScene";
 import { calculatePetState } from "../utils/petState";
+import { PET_TYPE_NAMES } from "../utils/spriteFramesIndex";
+import { t } from "../utils/i18n";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -53,6 +56,16 @@ const PetScreen: React.FC<PetScreenProps> = ({ streakData, todayLog, settings })
   const [newName, setNewName] = useState("");
   const [isNight, setIsNight] = useState(false);
   const notificationListener = useRef<Notifications.Subscription | null>(null);
+
+  const dynamicStyles = useMemo(() => ({
+    petCard: { backgroundColor: colors.card },
+    petName: { color: colors.accent },
+    renameHint: { color: colors.textSecondary },
+    section: { backgroundColor: colors.card },
+    sectionTitle: { color: colors.text },
+    petTypeButton: { backgroundColor: colors.background, borderColor: colors.border },
+    petTypeName: { color: colors.textSecondary },
+  }), [colors]);
 
   useEffect(() => {
     loadPetData();
@@ -105,6 +118,11 @@ const PetScreen: React.FC<PetScreenProps> = ({ streakData, todayLog, settings })
       loadPetData();
     }
     setRenameModalVisible(false);
+  };
+
+  const handlePetTypeChange = async (type: PetType) => {
+    await changePetType(type);
+    loadPetData();
   };
 
   const dismissSpecialLine = () => {
@@ -202,17 +220,43 @@ const PetScreen: React.FC<PetScreenProps> = ({ streakData, todayLog, settings })
             unlockedItems={streakData?.unlockedItems || []}
             onPress={handleRename}
             showSpeech={true}
+            petType={petData.petType}
           />
         </View>
       </View>
 
       <ScrollView style={styles.infoContainer} contentContainerStyle={styles.infoContent}>
-        <View style={styles.petCard}>
+        <View style={[styles.petCard, dynamicStyles.petCard]}>
           <TouchableOpacity onPress={handleRename}>
-            <Text style={styles.petName}>{petData.name}</Text>
-            <Text style={styles.renameHint}>点击改名</Text>
+            <Text style={[styles.petName, dynamicStyles.petName]}>{petData.name}</Text>
+            <Text style={[styles.renameHint, dynamicStyles.renameHint]}>点击改名</Text>
           </TouchableOpacity>
           <Text style={styles.levelTitle}>{levelTitle}</Text>
+        </View>
+
+        {/* 宠物类型选择 */}
+        <View style={[styles.section, dynamicStyles.section]}>
+          <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>宠物类型</Text>
+          <View style={styles.petTypeRow}>
+            {(['human', 'cat', 'dog'] as PetType[]).map((type) => (
+              <TouchableOpacity
+                key={type}
+                style={[
+                  styles.petTypeButton,
+                  petData.petType === type && styles.petTypeButtonActive,
+                ]}
+                onPress={() => handlePetTypeChange(type)}
+              >
+                <Text style={styles.petTypeEmoji}>{PET_TYPE_NAMES[type].emoji}</Text>
+                <Text style={[
+                  styles.petTypeName,
+                  petData.petType === type && styles.petTypeNameActive,
+                ]}>
+                  {PET_TYPE_NAMES[type].zh}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
         <View style={styles.section}>
@@ -505,6 +549,36 @@ const createStyles = (colors: ThemeColors) =>
       flexDirection: "row",
       flexWrap: "wrap",
       gap: 8,
+    },
+    petTypeRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      gap: 10,
+    },
+    petTypeButton: {
+      flex: 1,
+      backgroundColor: colors.background,
+      paddingVertical: 12,
+      borderRadius: 8,
+      alignItems: "center",
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    petTypeButtonActive: {
+      backgroundColor: colors.accent,
+      borderColor: colors.accent,
+    },
+    petTypeEmoji: {
+      fontSize: 24,
+      marginBottom: 4,
+    },
+    petTypeName: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      fontWeight: "600",
+    },
+    petTypeNameActive: {
+      color: colors.background,
     },
     decorationItem: {
       backgroundColor: colors.background,

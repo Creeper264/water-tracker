@@ -59,6 +59,9 @@ export type PetState =
   | "happy"
   | "overflow";
 
+// v2.8.0: Pet type selection
+export type PetType = 'human' | 'cat' | 'dog';
+
 // v1.4.0: Pet growth system
 export interface PetData {
   level: number;
@@ -67,6 +70,7 @@ export interface PetData {
   name: string;
   createdAt: number;
   lastFedAt: number;
+  petType?: PetType; // v2.8.0: 默认为 'human'
 }
 
 // 等级配置

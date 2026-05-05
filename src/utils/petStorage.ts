@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { PetData, PET_LEVELS, LEVEL_TITLES } from "../types";
+import { PetData, PET_LEVELS, LEVEL_TITLES, PetType } from "../types";
 
 const STORAGE_KEY = "@watertracker:pet";
 
@@ -10,6 +10,7 @@ const DEFAULT_PET: PetData = {
   name: "小水滴",
   createdAt: Date.now(),
   lastFedAt: Date.now(),
+  petType: "human",
 };
 
 // 获取宠物数据
@@ -93,6 +94,14 @@ export const feedPet = async (
 export const renamePet = async (name: string): Promise<PetData> => {
   const pet = await getPetData();
   pet.name = name;
+  await savePetData(pet);
+  return pet;
+};
+
+// 更改宠物类型 (v2.8.0)
+export const changePetType = async (petType: PetType): Promise<PetData> => {
+  const pet = await getPetData();
+  pet.petType = petType;
   await savePetData(pet);
   return pet;
 };

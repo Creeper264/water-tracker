@@ -8,7 +8,7 @@ import {
   Easing,
   Dimensions,
 } from "react-native";
-import { PetState } from "../types";
+import { PetState, PetType } from "../types";
 import { getPetStateMessage, getPetStateColor } from "../utils/petState";
 import { getDecorationById, Decoration } from "../utils/decorations";
 import PixelAnimation from "./pixel/PixelAnimation";
@@ -16,6 +16,7 @@ import PixelDecoration from "./pixel/PixelDecoration";
 import { PET_ANIMATIONS } from "../utils/spriteFrames";
 import { DECORATION_SPRITES } from "../utils/decorationSprites";
 import { useTheme } from "../contexts/ThemeContext";
+import { getAnimationsByType } from "../utils/spriteFramesIndex";
 
 interface PetCharacterProps {
   state: PetState;
@@ -24,6 +25,7 @@ interface PetCharacterProps {
   showSpeech?: boolean;
   onPress?: () => void;
   selectedDecorations?: Record<string, string | null>;
+  petType?: PetType;
 }
 
 const PetCharacter: React.FC<PetCharacterProps> = ({
@@ -33,6 +35,7 @@ const PetCharacter: React.FC<PetCharacterProps> = ({
   showSpeech = true,
   onPress,
   selectedDecorations,
+  petType = 'human',
 }) => {
   const { colors } = useTheme();
   const color = getPetStateColor(state);
@@ -41,6 +44,9 @@ const PetCharacter: React.FC<PetCharacterProps> = ({
   const dynamicStyles = useMemo(() => ({
     tapHint: { color: colors.textSecondary },
   }), [colors]);
+
+  // Get animations based on pet type
+  const animations = useMemo(() => getAnimationsByType(petType), [petType]);
 
   const activeDecorations = useMemo(() => {
     const result: Record<string, Decoration | null> = {
@@ -250,7 +256,7 @@ const PetCharacter: React.FC<PetCharacterProps> = ({
   const scaleX = facingDirection;
 
   // 防御性检查：确保动画存在，使用空帧作为最终默认值
-  const currentAnimation = PET_ANIMATIONS[state] ?? PET_ANIMATIONS.normal ?? { frames: [[]], fps: 1, loop: true };
+  const currentAnimation = animations[state] ?? PET_ANIMATIONS.normal ?? { frames: [[]], fps: 1, loop: true };
 
   const glowColor = state === "happy" || state === "overflow" ? getPetStateColor(state) : "transparent";
 
