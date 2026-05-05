@@ -58,9 +58,9 @@ export const useWaterTracker = () => {
   }, [loadData]);
 
   const addWater = useCallback(
-    async (amount: number) => {
+    async (amount: number, beverageId?: string) => {
       const today = getToday();
-      const updatedLog = await addWaterEntry(today, amount);
+      const updatedLog = await addWaterEntry(today, amount, beverageId);
       setTodayLog(updatedLog);
       // Update streak whenever a new entry might push us over the daily goal
       if (settings && updatedLog.total >= settings.dailyGoal) {

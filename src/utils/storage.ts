@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DailyLog, UserSettings, WaterEntry, StreakData } from "../types";
+import { computeEffectiveAmount, DEFAULT_BEVERAGE_ID } from "./beverages";
 
 const STORAGE_KEYS = {
   DAILY_LOGS: "@watertracker:daily_logs",
@@ -112,11 +113,38 @@ export const getDailyLog = async (date: string): Promise<DailyLog> => {
   try {
     const data = await AsyncStorage.getItem(STORAGE_KEYS.DAILY_LOGS);
     const logs: Record<string, DailyLog> = data ? JSON.parse(data) : {};
-    return logs[date] || { date, entries: [], total: 0 };
+    const log = logs[date] || { date, entries: [], total: 0 };
+    return migrateLog(log);
   } catch (error) {
     console.error("Error loading daily log:", error);
     return { date, entries: [], total: 0 };
   }
+};
+
+/**
+ * v2.2.0: backfill missing beverageId / effectiveAmount on legacy entries
+ * so existing installs treat all old entries as plain water.
+ */
+const migrateLog = (log: DailyLog): DailyLog => {
+  let dirty = false;
+  const entries = log.entries.map((e) => {
+    if (e.beverageId === undefined || e.effectiveAmount === undefined) {
+      dirty = true;
+      return {
+        ...e,
+        beverageId: e.beverageId ?? DEFAULT_BEVERAGE_ID,
+        effectiveAmount:
+          e.effectiveAmount ?? computeEffectiveAmount(e.amount, e.beverageId),
+      };
+    }
+    return e;
+  });
+  if (!dirty) return log;
+  const total = entries.reduce(
+    (sum, e) => sum + (e.effectiveAmount ?? e.amount),
+    0,
+  );
+  return { ...log, entries, total };
 };
 
 export const saveDailyLog = async (log: DailyLog): Promise<void> => {
@@ -133,16 +161,23 @@ export const saveDailyLog = async (log: DailyLog): Promise<void> => {
 export const addWaterEntry = async (
   date: string,
   amount: number,
+  beverageId: string = DEFAULT_BEVERAGE_ID,
 ): Promise<DailyLog> => {
   const log = await getDailyLog(date);
+  const effectiveAmount = computeEffectiveAmount(amount, beverageId);
   const entry: WaterEntry = {
     id: generateId(),
     amount,
     timestamp: Date.now(),
     date,
+    beverageId,
+    effectiveAmount,
   };
   log.entries.push(entry);
-  log.total = log.entries.reduce((sum, e) => sum + e.amount, 0);
+  log.total = log.entries.reduce(
+    (sum, e) => sum + (e.effectiveAmount ?? e.amount),
+    0,
+  );
   await saveDailyLog(log);
   return log;
 };
@@ -153,7 +188,10 @@ export const removeWaterEntry = async (
 ): Promise<DailyLog> => {
   const log = await getDailyLog(date);
   log.entries = log.entries.filter((e) => e.id !== entryId);
-  log.total = log.entries.reduce((sum, e) => sum + e.amount, 0);
+  log.total = log.entries.reduce(
+    (sum, e) => sum + (e.effectiveAmount ?? e.amount),
+    0,
+  );
   await saveDailyLog(log);
   return log;
 };

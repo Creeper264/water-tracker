@@ -15,6 +15,7 @@ import { calculatePetState } from "../utils/petState";
 import { getStreakData } from "../utils/storage";
 import { HapticsService } from "../utils/haptics";
 import { t, useLocale } from "../utils/i18n";
+import { BEVERAGES, DEFAULT_BEVERAGE_ID, getBeverageById, tBeverage } from "../utils/beverages";
 
 const { width } = Dimensions.get("window");
 const CIRCLE_SIZE = width * 0.7;
@@ -100,7 +101,7 @@ const WaterButton: React.FC<WaterButtonProps> = ({ amount, onPress }) => {
 interface HomeScreenProps {
   todayLog: DailyLog | null;
   settings: UserSettings | null;
-  onAddWater: (amount: number) => void;
+  onAddWater: (amount: number, beverageId?: string) => void;
   onRemoveEntry: (id: string) => void;
 }
 
@@ -112,6 +113,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 }) => {
   useLocale(); // re-render on language change
   const [streakData, setStreakData] = useState<StreakData | null>(null);
+  const [selectedBeverage, setSelectedBeverage] = useState<string>(DEFAULT_BEVERAGE_ID);
   const celebrationAnim = useRef(new Animated.Value(0)).current;
   const prevTotalRef = useRef(0); // 用于检测目标完成
 
@@ -191,12 +193,39 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
       <ProgressRing current={total} goal={goal} />
 
       <Text style={styles.sectionTitle}>{t("home.quickAdd")}</Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.beverageRow}
+      >
+        {BEVERAGES.map((b) => {
+          const active = b.id === selectedBeverage;
+          return (
+            <TouchableOpacity
+              key={b.id}
+              style={[
+                styles.beverageChip,
+                active && { borderColor: b.color, backgroundColor: b.color + "22" },
+              ]}
+              onPress={() => {
+                HapticsService.light();
+                setSelectedBeverage(b.id);
+              }}
+            >
+              <Text style={styles.beverageEmoji}>{b.emoji}</Text>
+              <Text style={[styles.beverageName, active && { color: b.color }]}>
+                {tBeverage(b.id)}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
       <View style={styles.buttonRow}>
         {quickButtons.map((button) => (
           <WaterButton
             key={button.id}
             amount={button.amount}
-            onPress={() => onAddWater(button.amount)}
+            onPress={() => onAddWater(button.amount, selectedBeverage)}
           />
         ))}
       </View>
@@ -205,22 +234,36 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
       {entries.length === 0 ? (
         <Text style={styles.emptyText}>{t("home.empty")}</Text>
       ) : (
-        entries.map((entry) => (
-          <View key={entry.id} style={styles.entryItem}>
-            <View style={styles.entryInfo}>
-              <Text style={styles.entryAmount}>{entry.amount} ml</Text>
-              <Text style={styles.entryTime}>
-                {new Date(entry.timestamp).toLocaleTimeString()}
-              </Text>
+        entries.map((entry) => {
+          const bev = getBeverageById(entry.beverageId);
+          const isAdjusted =
+            entry.effectiveAmount !== undefined &&
+            entry.effectiveAmount !== entry.amount;
+          return (
+            <View key={entry.id} style={styles.entryItem}>
+              <Text style={styles.entryEmoji}>{bev.emoji}</Text>
+              <View style={styles.entryInfo}>
+                <Text style={styles.entryAmount}>
+                  {entry.amount} ml
+                  {isAdjusted && (
+                    <Text style={styles.entryEffective}>
+                      {"  "}≈ {entry.effectiveAmount} ml
+                    </Text>
+                  )}
+                </Text>
+                <Text style={styles.entryTime}>
+                  {tBeverage(bev.id)} · {new Date(entry.timestamp).toLocaleTimeString()}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={styles.removeButton}
+                onPress={() => onRemoveEntry(entry.id)}
+              >
+                <Text style={styles.removeButtonText}>✕</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity
-              style={styles.removeButton}
-              onPress={() => onRemoveEntry(entry.id)}
-            >
-              <Text style={styles.removeButtonText}>✕</Text>
-            </TouchableOpacity>
-          </View>
-        ))
+          );
+        })
       )}
     </ScrollView>
   );
@@ -305,6 +348,40 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     justifyContent: "center",
     gap: 10,
+  },
+  beverageRow: {
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    gap: 8,
+  },
+  beverageChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: "#3d3d54",
+    backgroundColor: "#2d2d44",
+    marginRight: 8,
+  },
+  beverageEmoji: {
+    fontSize: 18,
+    marginRight: 6,
+  },
+  beverageName: {
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  entryEmoji: {
+    fontSize: 22,
+    marginRight: 12,
+  },
+  entryEffective: {
+    color: "#4FC3F7",
+    fontSize: 13,
+    fontWeight: "normal",
   },
   waterButton: {
     backgroundColor: "#4FC3F7",

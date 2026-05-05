@@ -1,8 +1,11 @@
 export interface WaterEntry {
   id: string;
-  amount: number;
+  amount: number;          // raw volume the user logged (ml)
   timestamp: number;
   date: string;
+  // v2.2.0: beverage tracking. Older entries lack these — treated as water.
+  beverageId?: string;     // 'water' | 'tea' | 'coffee' | ...
+  effectiveAmount?: number; // amount * hydrationRatio (for `total` aggregation)
 }
 
 export interface DailyLog {
