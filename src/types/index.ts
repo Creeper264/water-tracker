@@ -31,6 +31,10 @@ export interface UserSettings {
   customQuickButtons: QuickButton[];
   // v2.1.0: Localization
   language: LanguagePreference;
+  // v2.3.0: Smart goal recommender inputs (all optional)
+  bodyWeightKg?: number;
+  activityLevel?: 'sedentary' | 'light' | 'moderate' | 'high';
+  climate?: 'cool' | 'temperate' | 'hot';
 }
 
 export interface WeeklyStats {

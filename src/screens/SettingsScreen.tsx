@@ -17,6 +17,13 @@ import {
 import { useTheme } from "../contexts/ThemeContext";
 import { HapticsService } from "../utils/haptics";
 import { t, useLocale, setLocale } from "../utils/i18n";
+import {
+  ACTIVITY_LEVELS,
+  CLIMATE_LEVELS,
+  ActivityLevel,
+  ClimateLevel,
+  recommendDailyGoalMl,
+} from "../utils/goalCalculator";
 
 interface SettingsScreenProps {
   settings: UserSettings | null;
@@ -68,6 +75,17 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
     settings?.hapticFeedbackEnabled ?? true,
   );
 
+  // ── v2.3.0: Smart goal recommender ──
+  const [bodyWeight, setBodyWeight] = useState(
+    settings?.bodyWeightKg !== undefined ? String(settings.bodyWeightKg) : "",
+  );
+  const [activity, setActivity] = useState<ActivityLevel>(
+    settings?.activityLevel ?? "light",
+  );
+  const [climate, setClimate] = useState<ClimateLevel>(
+    settings?.climate ?? "temperate",
+  );
+
   // Sync local form state whenever settings prop changes (async load)
   useEffect(() => {
     if (settings) {
@@ -81,6 +99,11 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
       setSedentaryStart(settings.sedentaryStartHour.toString());
       setSedentaryEnd(settings.sedentaryEndHour.toString());
       setHapticEnabled(settings.hapticFeedbackEnabled ?? true);
+      if (settings.bodyWeightKg !== undefined) {
+        setBodyWeight(String(settings.bodyWeightKg));
+      }
+      if (settings.activityLevel) setActivity(settings.activityLevel);
+      if (settings.climate) setClimate(settings.climate);
     }
   }, [settings]);
 
@@ -255,6 +278,45 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
   };
 
   const currentLanguage: LanguagePreference = settings?.language ?? "system";
+
+  // ── v2.3.0: Smart goal handlers ──
+  const parsedWeight = (() => {
+    const n = parseFloat(bodyWeight);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  })();
+
+  const recommendedGoal =
+    parsedWeight !== null
+      ? recommendDailyGoalMl(parsedWeight, activity, climate)
+      : null;
+
+  const handleApplyRecommendation = () => {
+    if (recommendedGoal === null || parsedWeight === null) return;
+    setDailyGoal(String(recommendedGoal));
+    HapticsService.success();
+    onUpdateSettings({
+      dailyGoal: recommendedGoal,
+      bodyWeightKg: parsedWeight,
+      activityLevel: activity,
+      climate,
+    });
+    Alert.alert(
+      t("settings.savedTitle"),
+      t("settings.smartGoalAppliedMsg", { n: recommendedGoal }),
+    );
+  };
+
+  const ACTIVITY_LABEL_KEY: Record<ActivityLevel, string> = {
+    sedentary: "settings.activitySedentary",
+    light: "settings.activityLight",
+    moderate: "settings.activityModerate",
+    high: "settings.activityHigh",
+  };
+  const CLIMATE_LABEL_KEY: Record<ClimateLevel, string> = {
+    cool: "settings.climateCool",
+    temperate: "settings.climateTemperate",
+    hot: "settings.climateHot",
+  };
 
   // ────────────────────────────────────────────
   //  Render
@@ -455,6 +517,83 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
         </View>
       </View>
 
+      {/* ── v2.3.0: Smart Goal ── */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{t("settings.smartGoalTitle")}</Text>
+
+        <Text style={styles.inputTitle}>{t("settings.smartGoalWeight")}</Text>
+        <View style={styles.inputRow}>
+          <TextInput
+            style={styles.input}
+            value={bodyWeight}
+            onChangeText={setBodyWeight}
+            keyboardType="numeric"
+            placeholder={t("settings.smartGoalWeightPlaceholder")}
+            placeholderTextColor="#8b8b8b"
+          />
+          <Text style={styles.inputLabel}>kg</Text>
+        </View>
+
+        <Text style={styles.inputTitle}>{t("settings.smartGoalActivity")}</Text>
+        <View style={styles.themeRow}>
+          {ACTIVITY_LEVELS.map((lvl) => (
+            <TouchableOpacity
+              key={lvl}
+              style={[styles.themeButton, activity === lvl && styles.themeButtonActive]}
+              onPress={() => setActivity(lvl)}
+            >
+              <Text
+                style={[
+                  styles.themeButtonText,
+                  activity === lvl && styles.themeButtonTextActive,
+                ]}
+              >
+                {t(ACTIVITY_LABEL_KEY[lvl])}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <Text style={styles.inputTitle}>{t("settings.smartGoalClimate")}</Text>
+        <View style={styles.themeRow}>
+          {CLIMATE_LEVELS.map((c) => (
+            <TouchableOpacity
+              key={c}
+              style={[styles.themeButton, climate === c && styles.themeButtonActive]}
+              onPress={() => setClimate(c)}
+            >
+              <Text
+                style={[
+                  styles.themeButtonText,
+                  climate === c && styles.themeButtonTextActive,
+                ]}
+              >
+                {t(CLIMATE_LABEL_KEY[c])}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {recommendedGoal !== null && (
+          <Text style={styles.recommendPreview}>
+            {t("settings.smartGoalPreview", { n: recommendedGoal })}
+          </Text>
+        )}
+
+        <TouchableOpacity
+          style={[
+            styles.saveButton,
+            recommendedGoal === null && styles.saveButtonDisabled,
+          ]}
+          onPress={handleApplyRecommendation}
+          disabled={recommendedGoal === null}
+        >
+          <Text style={styles.saveButtonText}>
+            {t("settings.smartGoalApply")}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       {/* ── v2.0.0: Theme & Customization ── */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t("settings.themeTitle")}</Text>
@@ -506,7 +645,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t("settings.about")}</Text>
         <Text style={styles.aboutText}>
-          Water Tracker v2.1.0{"\n"}
+          Water Tracker v2.3.0{"\n"}
           {t("app.about")}
         </Text>
       </View>
@@ -570,6 +709,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     marginTop: 5,
+  },
+  saveButtonDisabled: {
+    backgroundColor: "#3d3d54",
   },
   saveButtonText: {
     color: "#1a1a2e",
@@ -635,6 +777,13 @@ const styles = StyleSheet.create({
     color: "#8b8b8b",
     fontSize: 14,
     lineHeight: 22,
+  },
+  recommendPreview: {
+    color: "#4FC3F7",
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
+    marginVertical: 12,
   },
 });
 

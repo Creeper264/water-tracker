@@ -164,6 +164,23 @@ const en: Dict = {
   "settings.langZh": "中文",
   "settings.langSystem": "System",
 
+  // v2.3.0 Smart goal calculator
+  "settings.smartGoalTitle": "🎯 Smart Goal",
+  "settings.smartGoalWeight": "Body weight (kg)",
+  "settings.smartGoalWeightPlaceholder": "e.g. 65",
+  "settings.smartGoalActivity": "Activity level",
+  "settings.smartGoalClimate": "Climate",
+  "settings.activitySedentary": "Sedentary",
+  "settings.activityLight": "Light",
+  "settings.activityModerate": "Moderate",
+  "settings.activityHigh": "High",
+  "settings.climateCool": "Cool",
+  "settings.climateTemperate": "Temperate",
+  "settings.climateHot": "Hot",
+  "settings.smartGoalPreview": "Recommended: {n} ml/day",
+  "settings.smartGoalApply": "Apply recommendation",
+  "settings.smartGoalAppliedMsg": "Daily goal updated to {n} ml.",
+
   "settings.about": "About",
 };
 
@@ -269,6 +286,23 @@ const zh: Dict = {
   "settings.langEn": "English",
   "settings.langZh": "中文",
   "settings.langSystem": "跟随系统",
+
+  // v2.3.0 智能目标
+  "settings.smartGoalTitle": "🎯 智能目标",
+  "settings.smartGoalWeight": "体重（公斤）",
+  "settings.smartGoalWeightPlaceholder": "例如 65",
+  "settings.smartGoalActivity": "活动水平",
+  "settings.smartGoalClimate": "气候",
+  "settings.activitySedentary": "久坐",
+  "settings.activityLight": "轻度",
+  "settings.activityModerate": "中度",
+  "settings.activityHigh": "高强度",
+  "settings.climateCool": "凉爽",
+  "settings.climateTemperate": "温和",
+  "settings.climateHot": "炎热",
+  "settings.smartGoalPreview": "推荐：每日 {n} ml",
+  "settings.smartGoalApply": "应用推荐值",
+  "settings.smartGoalAppliedMsg": "每日饮水目标已更新为 {n} ml。",
 
   "settings.about": "关于",
 };
