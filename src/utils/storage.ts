@@ -22,6 +22,8 @@ const DEFAULT_SETTINGS: UserSettings = {
   theme: 'dark',
   hapticFeedbackEnabled: true,
   customQuickButtons: [],
+  // v2.1.0 localization default — 'system' picks up device locale
+  language: 'system',
 };
 
 const DEFAULT_STREAK: StreakData = {

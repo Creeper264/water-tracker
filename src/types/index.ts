@@ -26,6 +26,8 @@ export interface UserSettings {
   theme: AppTheme;
   hapticFeedbackEnabled: boolean;
   customQuickButtons: QuickButton[];
+  // v2.1.0: Localization
+  language: LanguagePreference;
 }
 
 export interface WeeklyStats {
@@ -121,6 +123,9 @@ export interface InteractiveSceneElement {
 
 // v2.0.0: Theme System
 export type AppTheme = 'dark' | 'light' | 'system';
+
+// v2.1.0: Localization
+export type LanguagePreference = 'en' | 'zh' | 'system';
 
 export interface ThemeColors {
   background: string;

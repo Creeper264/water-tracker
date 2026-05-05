@@ -9,13 +9,14 @@ import {
   Switch,
   Alert,
 } from "react-native";
-import { UserSettings, AppTheme } from "../types";
+import { UserSettings, AppTheme, LanguagePreference } from "../types";
 import {
   requestNotificationPermissions,
   rescheduleAllActiveReminders,
 } from "../utils/notifications";
 import { useTheme } from "../contexts/ThemeContext";
 import { HapticsService } from "../utils/haptics";
+import { t, useLocale, setLocale } from "../utils/i18n";
 
 interface SettingsScreenProps {
   settings: UserSettings | null;
@@ -26,6 +27,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
   settings,
   onUpdateSettings,
 }) => {
+  useLocale();
   const { theme, setTheme } = useTheme();
 
   // ── Water goal ──
@@ -100,6 +102,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
     theme,
     hapticFeedbackEnabled: hapticEnabled,
     customQuickButtons: settings?.customQuickButtons ?? [],
+    language: settings?.language ?? "system",
     ...partial,
   });
 
@@ -110,11 +113,11 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const handleSaveGoal = () => {
     const goal = parseInt(dailyGoal, 10);
     if (isNaN(goal) || goal < 100 || goal > 10000) {
-      Alert.alert("无效目标", "请输入 100 ~ 10000 ml 之间的数值");
+      Alert.alert(t("settings.invalidGoalTitle"), t("settings.invalidGoalMsg"));
       return;
     }
     onUpdateSettings({ dailyGoal: goal });
-    Alert.alert("保存成功", "每日饮水目标已更新！");
+    Alert.alert(t("settings.savedTitle"), t("settings.savedGoalMsg"));
   };
 
   // ────────────────────────────────────────────
@@ -125,7 +128,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
     if (value) {
       const granted = await requestNotificationPermissions();
       if (!granted) {
-        Alert.alert("权限被拒绝", "请在设备设置中开启通知权限");
+        Alert.alert(t("settings.permissionDenied"), t("settings.permissionDeniedMsg"));
         return;
       }
     }
@@ -144,19 +147,19 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
     const end = parseInt(endHour, 10);
 
     if (isNaN(intervalMin) || intervalMin < 15 || intervalMin > 240) {
-      Alert.alert("无效间隔", "请输入 15 ~ 240 分钟之间的数值");
+      Alert.alert(t("settings.invalidIntervalTitle"), t("settings.invalidIntervalWaterMsg"));
       return;
     }
     if (isNaN(start) || start < 0 || start > 23) {
-      Alert.alert("无效时间", "开始时间请输入 0 ~ 23");
+      Alert.alert(t("settings.invalidTimeTitle"), t("settings.invalidStartHour"));
       return;
     }
     if (isNaN(end) || end < 0 || end > 23) {
-      Alert.alert("无效时间", "结束时间请输入 0 ~ 23");
+      Alert.alert(t("settings.invalidTimeTitle"), t("settings.invalidEndHour"));
       return;
     }
     if (start >= end) {
-      Alert.alert("时间段无效", "开始时间必须早于结束时间");
+      Alert.alert(t("settings.invalidWindowTitle"), t("settings.invalidWindowMsg"));
       return;
     }
 
@@ -168,7 +171,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
     const full = buildFullSettings(newPartial);
     await rescheduleAllActiveReminders(full);
     onUpdateSettings(newPartial);
-    Alert.alert("保存成功", "饮水提醒设置已更新！");
+    Alert.alert(t("settings.savedTitle"), t("settings.savedWaterMsg"));
   };
 
   // ────────────────────────────────────────────
@@ -179,7 +182,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
     if (value) {
       const granted = await requestNotificationPermissions();
       if (!granted) {
-        Alert.alert("权限被拒绝", "请在设备设置中开启通知权限");
+        Alert.alert(t("settings.permissionDenied"), t("settings.permissionDeniedMsg"));
         return;
       }
     }
@@ -200,19 +203,19 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
     const end = parseInt(sedentaryEnd, 10);
 
     if (isNaN(intervalMin) || intervalMin < 15 || intervalMin > 120) {
-      Alert.alert("无效间隔", "请输入 15 ~ 120 分钟之间的数值");
+      Alert.alert(t("settings.invalidIntervalTitle"), t("settings.invalidIntervalSedentaryMsg"));
       return;
     }
     if (isNaN(start) || start < 0 || start > 23) {
-      Alert.alert("无效时间", "开始时间请输入 0 ~ 23");
+      Alert.alert(t("settings.invalidTimeTitle"), t("settings.invalidStartHour"));
       return;
     }
     if (isNaN(end) || end < 0 || end > 23) {
-      Alert.alert("无效时间", "结束时间请输入 0 ~ 23");
+      Alert.alert(t("settings.invalidTimeTitle"), t("settings.invalidEndHour"));
       return;
     }
     if (start >= end) {
-      Alert.alert("时间段无效", "开始时间必须早于结束时间");
+      Alert.alert(t("settings.invalidWindowTitle"), t("settings.invalidWindowMsg"));
       return;
     }
 
@@ -224,7 +227,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
     const full = buildFullSettings(newPartial);
     await rescheduleAllActiveReminders(full);
     onUpdateSettings(newPartial);
-    Alert.alert("保存成功", "久坐提醒设置已更新！");
+    Alert.alert(t("settings.savedTitle"), t("settings.savedSedentaryMsg"));
   };
 
   // ────────────────────────────────────────────
@@ -245,17 +248,25 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
     }
   };
 
+  const handleLanguageChange = (lang: LanguagePreference) => {
+    setLocale(lang);
+    HapticsService.light();
+    onUpdateSettings({ language: lang });
+  };
+
+  const currentLanguage: LanguagePreference = settings?.language ?? "system";
+
   // ────────────────────────────────────────────
   //  Render
   // ────────────────────────────────────────────
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Settings</Text>
+      <Text style={styles.title}>{t("settings.title")}</Text>
 
       {/* ── Daily Goal ── */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>每日饮水目标</Text>
+        <Text style={styles.sectionTitle}>{t("settings.dailyGoal")}</Text>
         <View style={styles.inputRow}>
           <TextInput
             style={styles.input}
@@ -268,15 +279,15 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
           <Text style={styles.inputLabel}>ml</Text>
         </View>
         <TouchableOpacity style={styles.saveButton} onPress={handleSaveGoal}>
-          <Text style={styles.saveButtonText}>保存目标</Text>
+          <Text style={styles.saveButtonText}>{t("settings.saveGoal")}</Text>
         </TouchableOpacity>
       </View>
 
       {/* ── Water Reminders ── */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>💧 饮水提醒</Text>
+        <Text style={styles.sectionTitle}>{t("settings.waterReminders")}</Text>
         <View style={styles.switchRow}>
-          <Text style={styles.switchLabel}>启用饮水提醒</Text>
+          <Text style={styles.switchLabel}>{t("settings.enableWaterReminders")}</Text>
           <Switch
             value={notificationsEnabled}
             onValueChange={handleNotificationToggle}
@@ -287,7 +298,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
         {notificationsEnabled && (
           <>
-            <Text style={styles.inputTitle}>提醒间隔（分钟）</Text>
+            <Text style={styles.inputTitle}>{t("settings.intervalMinutes")}</Text>
             <View style={styles.inputRow}>
               <TextInput
                 style={styles.input}
@@ -300,7 +311,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
               <Text style={styles.inputLabel}>min</Text>
             </View>
 
-            <Text style={styles.inputTitle}>生效时段</Text>
+            <Text style={styles.inputTitle}>{t("settings.activeWindow")}</Text>
             <View style={styles.timeRow}>
               <View style={styles.timeInput}>
                 <TextInput
@@ -312,7 +323,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   placeholderTextColor="#8b8b8b"
                 />
               </View>
-              <Text style={styles.timeSeparator}>到</Text>
+              <Text style={styles.timeSeparator}>{t("settings.toRange")}</Text>
               <View style={styles.timeInput}>
                 <TextInput
                   style={styles.input}
@@ -329,7 +340,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
               style={styles.saveButton}
               onPress={handleSaveWaterSettings}
             >
-              <Text style={styles.saveButtonText}>保存饮水提醒设置</Text>
+              <Text style={styles.saveButtonText}>{t("settings.saveWaterReminders")}</Text>
             </TouchableOpacity>
           </>
         )}
@@ -337,9 +348,9 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
       {/* ── Sedentary Reminders ── */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>🧍 久坐提醒</Text>
+        <Text style={styles.sectionTitle}>{t("settings.sedentaryReminders")}</Text>
         <View style={styles.switchRow}>
-          <Text style={styles.switchLabel}>启用久坐提醒</Text>
+          <Text style={styles.switchLabel}>{t("settings.enableSedentaryReminders")}</Text>
           <Switch
             value={sedentaryEnabled}
             onValueChange={handleSedentaryToggle}
@@ -350,7 +361,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
         {sedentaryEnabled && (
           <>
-            <Text style={styles.inputTitle}>提醒间隔（分钟，建议 30~60）</Text>
+            <Text style={styles.inputTitle}>{t("settings.sedentaryIntervalHint")}</Text>
             <View style={styles.inputRow}>
               <TextInput
                 style={styles.input}
@@ -363,7 +374,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
               <Text style={styles.inputLabel}>min</Text>
             </View>
 
-            <Text style={styles.inputTitle}>生效时段（工作时间）</Text>
+            <Text style={styles.inputTitle}>{t("settings.sedentaryWindow")}</Text>
             <View style={styles.timeRow}>
               <View style={styles.timeInput}>
                 <TextInput
@@ -375,7 +386,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   placeholderTextColor="#8b8b8b"
                 />
               </View>
-              <Text style={styles.timeSeparator}>到</Text>
+              <Text style={styles.timeSeparator}>{t("settings.toRange")}</Text>
               <View style={styles.timeInput}>
                 <TextInput
                   style={styles.input}
@@ -392,24 +403,70 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
               style={styles.saveButton}
               onPress={handleSaveSedentarySettings}
             >
-              <Text style={styles.saveButtonText}>保存久坐提醒设置</Text>
+              <Text style={styles.saveButtonText}>{t("settings.saveSedentaryReminders")}</Text>
             </TouchableOpacity>
           </>
         )}
       </View>
 
+      {/* ── Language ── */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{t("settings.languageTitle")}</Text>
+        <View style={styles.themeRow}>
+          <TouchableOpacity
+            style={[styles.themeButton, currentLanguage === "en" && styles.themeButtonActive]}
+            onPress={() => handleLanguageChange("en")}
+          >
+            <Text
+              style={[
+                styles.themeButtonText,
+                currentLanguage === "en" && styles.themeButtonTextActive,
+              ]}
+            >
+              {t("settings.langEn")}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.themeButton, currentLanguage === "zh" && styles.themeButtonActive]}
+            onPress={() => handleLanguageChange("zh")}
+          >
+            <Text
+              style={[
+                styles.themeButtonText,
+                currentLanguage === "zh" && styles.themeButtonTextActive,
+              ]}
+            >
+              {t("settings.langZh")}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.themeButton, currentLanguage === "system" && styles.themeButtonActive]}
+            onPress={() => handleLanguageChange("system")}
+          >
+            <Text
+              style={[
+                styles.themeButtonText,
+                currentLanguage === "system" && styles.themeButtonTextActive,
+              ]}
+            >
+              {t("settings.langSystem")}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
       {/* ── v2.0.0: Theme & Customization ── */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>🎨 主题与个性化</Text>
-        
-        <Text style={styles.inputTitle}>主题模式</Text>
+        <Text style={styles.sectionTitle}>{t("settings.themeTitle")}</Text>
+
+        <Text style={styles.inputTitle}>{t("settings.themeMode")}</Text>
         <View style={styles.themeRow}>
           <TouchableOpacity
             style={[styles.themeButton, theme === 'light' && styles.themeButtonActive]}
             onPress={() => handleThemeChange('light')}
           >
             <Text style={[styles.themeButtonText, theme === 'light' && styles.themeButtonTextActive]}>
-              浅色
+              {t("settings.themeLight")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -417,7 +474,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
             onPress={() => handleThemeChange('dark')}
           >
             <Text style={[styles.themeButtonText, theme === 'dark' && styles.themeButtonTextActive]}>
-              深色
+              {t("settings.themeDark")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -425,13 +482,13 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
             onPress={() => handleThemeChange('system')}
           >
             <Text style={[styles.themeButtonText, theme === 'system' && styles.themeButtonTextActive]}>
-              跟随系统
+              {t("settings.themeSystem")}
             </Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.switchRow}>
-          <Text style={styles.switchLabel}>振动反馈</Text>
+          <Text style={styles.switchLabel}>{t("settings.haptics")}</Text>
           <Switch
             value={hapticEnabled}
             onValueChange={handleHapticToggle}
@@ -441,17 +498,16 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
         </View>
 
         <Text style={styles.hintText}>
-          💡 自定义快捷按钮功能即将推出，敬请期待！
+          {t("settings.customQuickHint")}
         </Text>
       </View>
 
       {/* ── About ── */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>关于</Text>
+        <Text style={styles.sectionTitle}>{t("settings.about")}</Text>
         <Text style={styles.aboutText}>
-          Water Tracker v1.3.1{"\n"}
-          保持水分，保持健康！{"\n\n"}
-          连续打卡可以解锁像素小人的专属装扮 ✨
+          Water Tracker v2.1.0{"\n"}
+          {t("app.about")}
         </Text>
       </View>
     </ScrollView>

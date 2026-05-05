@@ -11,14 +11,26 @@ import { useFocusEffect } from "@react-navigation/native";
 import { LineChart, BarChart } from "react-native-chart-kit";
 import { UserSettings } from "../types";
 import { getWeeklyData, getDateRange } from "../utils/storage";
+import { t, useLocale } from "../utils/i18n";
 
 const screenWidth = Dimensions.get("window").width;
+
+const DAY_KEYS = [
+  "day.sun",
+  "day.mon",
+  "day.tue",
+  "day.wed",
+  "day.thu",
+  "day.fri",
+  "day.sat",
+] as const;
 
 interface StatsScreenProps {
   settings: UserSettings | null;
 }
 
 const StatsScreen: React.FC<StatsScreenProps> = ({ settings }) => {
+  useLocale();
   const [viewMode, setViewMode] = useState<"week" | "month">("week");
   const [chartData, setChartData] = useState<number[]>([]);
   const [labels, setLabels] = useState<string[]>([]);
@@ -51,11 +63,7 @@ const StatsScreen: React.FC<StatsScreenProps> = ({ settings }) => {
           const dateObj = new Date(y, m - 1, d);
 
           if (viewMode === "week") {
-            chartLabels.push(
-              ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][
-                dateObj.getDay()
-              ],
-            );
+            chartLabels.push(t(DAY_KEYS[dateObj.getDay()]));
           } else if (index % 5 === 0) {
             chartLabels.push(`${dateObj.getMonth() + 1}/${dateObj.getDate()}`);
           } else {
@@ -112,7 +120,7 @@ const StatsScreen: React.FC<StatsScreenProps> = ({ settings }) => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Hydration Stats</Text>
+      <Text style={styles.title}>{t("stats.title")}</Text>
 
       <View style={styles.toggleContainer}>
         <TouchableOpacity
@@ -128,7 +136,7 @@ const StatsScreen: React.FC<StatsScreenProps> = ({ settings }) => {
               viewMode === "week" && styles.toggleTextActive,
             ]}
           >
-            Week
+            {t("stats.week")}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -144,7 +152,7 @@ const StatsScreen: React.FC<StatsScreenProps> = ({ settings }) => {
               viewMode === "month" && styles.toggleTextActive,
             ]}
           >
-            Month
+            {t("stats.month")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -152,31 +160,31 @@ const StatsScreen: React.FC<StatsScreenProps> = ({ settings }) => {
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{average}</Text>
-          <Text style={styles.statLabel}>Avg ml/day</Text>
+          <Text style={styles.statLabel}>{t("stats.avg")}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{total}</Text>
-          <Text style={styles.statLabel}>Total ml</Text>
+          <Text style={styles.statLabel}>{t("stats.total")}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{goalsMet}</Text>
-          <Text style={styles.statLabel}>Goals Met</Text>
+          <Text style={styles.statLabel}>{t("stats.goalsMet")}</Text>
         </View>
       </View>
 
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>
-          {viewMode === "week" ? "Weekly Progress" : "Monthly Progress"}
+          {viewMode === "week" ? t("stats.weekly") : t("stats.monthly")}
         </Text>
         {loading ? (
           <View style={styles.emptyChart}>
-            <Text style={styles.emptyChartText}>Loading...</Text>
+            <Text style={styles.emptyChartText}>{t("stats.loading")}</Text>
           </View>
         ) : !hasData ? (
           <View style={styles.emptyChart}>
-            <Text style={styles.emptyChartText}>No data for this period</Text>
+            <Text style={styles.emptyChartText}>{t("stats.empty")}</Text>
             <Text style={styles.emptyChartSubText}>
-              Start drinking water to see your stats!
+              {t("stats.emptyHint")}
             </Text>
           </View>
         ) : viewMode === "week" ? (
@@ -211,7 +219,7 @@ const StatsScreen: React.FC<StatsScreenProps> = ({ settings }) => {
 
       <View style={styles.goalLine}>
         <View style={styles.goalIndicator} />
-        <Text style={styles.goalText}>Daily Goal: {goal} ml</Text>
+        <Text style={styles.goalText}>{t("stats.dailyGoal", { n: goal })}</Text>
       </View>
     </ScrollView>
   );

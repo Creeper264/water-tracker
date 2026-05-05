@@ -14,6 +14,7 @@ import PetCharacter from "../components/PetCharacter";
 import { calculatePetState } from "../utils/petState";
 import { getStreakData } from "../utils/storage";
 import { HapticsService } from "../utils/haptics";
+import { t, useLocale } from "../utils/i18n";
 
 const { width } = Dimensions.get("window");
 const CIRCLE_SIZE = width * 0.7;
@@ -68,7 +69,7 @@ const ProgressRing: React.FC<ProgressRingProps> = ({ current, goal }) => {
       <View style={styles.progressInner}>
         <Text style={styles.progressAmount}>{current}</Text>
         <Text style={styles.progressUnit}>ml</Text>
-        <Text style={styles.progressGoal}>Goal: {goal} ml</Text>
+        <Text style={styles.progressGoal}>{t("home.goalLabel", { n: goal })}</Text>
         <Text style={[styles.progressPercent, { color: progressColor }]}>
           {percentage}%
         </Text>
@@ -109,6 +110,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   onAddWater,
   onRemoveEntry,
 }) => {
+  useLocale(); // re-render on language change
   const [streakData, setStreakData] = useState<StreakData | null>(null);
   const celebrationAnim = useRef(new Animated.Value(0)).current;
   const prevTotalRef = useRef(0); // 用于检测目标完成
@@ -143,9 +145,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning!";
-    if (hour < 17) return "Good Afternoon!";
-    return "Good Evening!";
+    if (hour < 12) return t("greeting.morning");
+    if (hour < 17) return t("greeting.afternoon");
+    return t("greeting.evening");
   };
 
   const handlePetPress = () => {
@@ -168,7 +170,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.greeting}>{getGreeting()}</Text>
-      <Text style={styles.title}>Hydration Status</Text>
+      <Text style={styles.title}>{t("home.statusTitle")}</Text>
 
       <PetCharacter
         state={petState}
@@ -181,14 +183,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         <View style={styles.streakContainer}>
           <Text style={styles.streakEmoji}>🔥</Text>
           <Text style={styles.streakText}>
-            连续打卡 {streakData.currentStreak} 天
+            {t("home.streak", { n: streakData.currentStreak })}
           </Text>
         </View>
       )}
 
       <ProgressRing current={total} goal={goal} />
 
-      <Text style={styles.sectionTitle}>Quick Add</Text>
+      <Text style={styles.sectionTitle}>{t("home.quickAdd")}</Text>
       <View style={styles.buttonRow}>
         {quickButtons.map((button) => (
           <WaterButton
@@ -199,9 +201,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         ))}
       </View>
 
-      <Text style={styles.sectionTitle}>Today's Log</Text>
+      <Text style={styles.sectionTitle}>{t("home.todayLog")}</Text>
       {entries.length === 0 ? (
-        <Text style={styles.emptyText}>No entries yet. Start tracking!</Text>
+        <Text style={styles.emptyText}>{t("home.empty")}</Text>
       ) : (
         entries.map((entry) => (
           <View key={entry.id} style={styles.entryItem}>

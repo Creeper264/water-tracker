@@ -11,6 +11,7 @@ import { useWaterTracker } from './hooks/useWaterTracker';
 import { getStreakData } from './utils/storage';
 import { StreakData } from './types';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { setLocale, useLocale, t } from './utils/i18n';
 
 const Tab = createBottomTabNavigator();
 
@@ -49,6 +50,14 @@ function PetIcon({ focused }: { focused: boolean }) {
 export default function App() {
   const { todayLog, settings, loading, addWater, removeEntry, updateSettings, refresh } = useWaterTracker();
   const [streakData, setStreakData] = useState<StreakData | null>(null);
+  useLocale(); // re-render on language change
+
+  // Apply user's language preference whenever settings load/change
+  useEffect(() => {
+    if (settings?.language) {
+      setLocale(settings.language);
+    }
+  }, [settings?.language]);
 
   useEffect(() => {
     const loadStreak = async () => {
@@ -61,7 +70,7 @@ export default function App() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading Hydration Data...</Text>
+        <Text style={styles.loadingText}>{t('app.loading')}</Text>
       </View>
     );
   }
@@ -83,7 +92,8 @@ export default function App() {
             name="Home"
             options={{
               tabBarIcon: HomeIcon,
-              headerTitle: 'Water Tracker',
+              tabBarLabel: t('tab.home'),
+              headerTitle: t('header.home'),
             }}
           >
             {() => (
@@ -99,7 +109,8 @@ export default function App() {
             name="Pet"
             options={{
               tabBarIcon: PetIcon,
-              headerTitle: '宠物空间',
+              tabBarLabel: t('tab.pet'),
+              headerTitle: t('header.pet'),
             }}
           >
             {() => (
@@ -114,7 +125,8 @@ export default function App() {
             name="Stats"
             options={{
               tabBarIcon: StatsIcon,
-              headerTitle: 'Statistics',
+              tabBarLabel: t('tab.stats'),
+              headerTitle: t('header.stats'),
             }}
           >
             {() => <StatsScreen settings={settings} />}
@@ -123,7 +135,8 @@ export default function App() {
             name="Settings"
             options={{
               tabBarIcon: SettingsIcon,
-              headerTitle: 'Settings',
+              tabBarLabel: t('tab.settings'),
+              headerTitle: t('header.settings'),
             }}
           >
             {() => (
