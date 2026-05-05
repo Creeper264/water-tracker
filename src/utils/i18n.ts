@@ -181,6 +181,14 @@ const en: Dict = {
   "settings.smartGoalApply": "Apply recommendation",
   "settings.smartGoalAppliedMsg": "Daily goal updated to {n} ml.",
 
+  // v2.4.0 Data export
+  "settings.dataTitle": "📦 Data",
+  "settings.exportButton": "Export data",
+  "settings.exportSuccessTitle": "Export ready",
+  "settings.exportSuccessMsg": "Your data has been shared.",
+  "settings.exportErrorTitle": "Export failed",
+  "settings.exportErrorMsg": "Could not export data. Please try again.",
+
   "settings.about": "About",
 };
 
@@ -303,6 +311,14 @@ const zh: Dict = {
   "settings.smartGoalPreview": "推荐：每日 {n} ml",
   "settings.smartGoalApply": "应用推荐值",
   "settings.smartGoalAppliedMsg": "每日饮水目标已更新为 {n} ml。",
+
+  // v2.4.0 数据导出
+  "settings.dataTitle": "📦 数据",
+  "settings.exportButton": "导出数据",
+  "settings.exportSuccessTitle": "导出已准备",
+  "settings.exportSuccessMsg": "已通过分享导出。",
+  "settings.exportErrorTitle": "导出失败",
+  "settings.exportErrorMsg": "无法导出数据，请重试。",
 
   "settings.about": "关于",
 };

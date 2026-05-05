@@ -24,6 +24,7 @@ import {
   ClimateLevel,
   recommendDailyGoalMl,
 } from "../utils/goalCalculator";
+import { exportDataViaShare } from "../utils/dataExport";
 
 interface SettingsScreenProps {
   settings: UserSettings | null;
@@ -304,6 +305,15 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
       t("settings.savedTitle"),
       t("settings.smartGoalAppliedMsg", { n: recommendedGoal }),
     );
+  };
+
+  const handleExportData = async () => {
+    try {
+      await exportDataViaShare();
+      Alert.alert(t("settings.exportSuccessTitle"), t("settings.exportSuccessMsg"));
+    } catch {
+      Alert.alert(t("settings.exportErrorTitle"), t("settings.exportErrorMsg"));
+    }
   };
 
   const ACTIVITY_LABEL_KEY: Record<ActivityLevel, string> = {
@@ -641,11 +651,19 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
         </Text>
       </View>
 
+      {/* ── Data Export ── */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{t("settings.dataTitle")}</Text>
+        <TouchableOpacity style={styles.saveButton} onPress={handleExportData}>
+          <Text style={styles.saveButtonText}>{t("settings.exportButton")}</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* ── About ── */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t("settings.about")}</Text>
         <Text style={styles.aboutText}>
-          Water Tracker v2.3.0{"\n"}
+          Water Tracker v2.4.0{"\n"}
           {t("app.about")}
         </Text>
       </View>
