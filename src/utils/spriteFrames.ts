@@ -1,405 +1,287 @@
 import { Palette, PixelFrame, AnimationConfig, PetState } from "../types";
 
 // ─────────────────────────────────────────────
-//  调色盘定义
+//  8-BIT STYLE PALETTE (Limited to 4-5 colors)
 // ─────────────────────────────────────────────
 
 export const PALETTE: Palette = {
-  // 皮肤色调
-  S: "#F4C2A1", // 皮肤
-  S1: "#E8B090", // 皮肤阴影
-  
-  // 头发色调
-  H: "#5C3D2E", // 头发
-  H1: "#4A3020", // 头发阴影
-  
-  // 身体颜色（根据状态变化）
-  B: "#4FC3F7", // 正常蓝色
-  B1: "#3da8d6", // 蓝色阴影
-  
-  // 眼睛
-  E: "#333333", // 眼睛
-  E1: "#ffffff", // 眼睛高光
-  
-  // 嘴巴
-  M: "#E57373", // 嘴巴
-  
-  // 特效颜色
-  W: "#ffffff", // 白色
-  G: "#ffd700", // 金色（星星）
-  R: "#ff4757", // 红色（汗水）
-  P: "#a55eea", // 紫色（水滴）
-  
-  // 状态颜色
-  C_DYING: "#747d8c", // dying 灰色
-  C_WEAK: "#ffa502", // dehydrated 橙色
-  C_NORMAL: "#4FC3F7", // normal 蓝色
-  C_GOOD: "#2ed573", // good 绿色
-  C_HAPPY: "#00e676", // happy 亮绿
-  C_OVERFLOW: "#a55eea", // overflow 紫色
-  
-  // 透明
+  // Core 4 colors (8-bit standard)
+  BL: "#000000",  // Black outline (ESSENTIAL!)
+  SK: "#F8D8B8",  // Skin (light peach)
+  HR: "#483020",  // Hair (dark brown)
+  BD: "#38B0D8",  // Body (cyan blue)
+
+  // Facial features (using existing colors)
+  EY: "#000000",  // Eyes (black, same as outline)
+  WH: "#FFFFFF",  // White (for highlights)
+
+  // State colors (change body color based on state)
+  C_DYING: "#787878",    // Gray
+  C_WEAK: "#E8A030",     // Orange
+  C_NORMAL: "#38B0D8",   // Cyan
+  C_GOOD: "#50C878",     // Green
+  C_HAPPY: "#70E090",    // Bright green
+  C_OVERFLOW: "#B078D8", // Purple
+
+  // Effect colors
+  ST: "#F8D830",  // Star (gold)
+  SW: "#A04040",  // Sweat (dark red)
+  DR: "#B078D8",  // Droplet (purple)
+
+  // Transparent
   ".": null,
 };
 
 // ─────────────────────────────────────────────
-//  基础帧定义（16x24 像素格）
+//  TRUE 8-BIT STYLE FRAMES
+//  Key features:
+//  - Black outline around entire character
+//  - Limited color palette (4-5 colors)
+//  - Oversized head (chibi style)
+//  - Simple facial features (1-pixel eyes)
 // ─────────────────────────────────────────────
 
-// 通用头部（8x8）
-const HEAD_BASE: PixelFrame = [
-  [".", ".", ".", "H", "H", ".", ".", "."],
-  [".", ".", "H", "H", "H", "H", ".", "."],
-  [".", ".", ".", "S", "S", ".", ".", "."],
-  [".", ".", "S", "S", "S", "S", ".", "."],
-  [".", ".", "S", "S", "S", "S", ".", "."],
-  [".", ".", ".", "S", "S", ".", ".", "."],
-];
+// Frame dimensions: 10 wide x 12 tall (wider for outline, shorter for chibi)
 
 // ─────────────────────────────────────────────
-//  DYING 状态（灰色，X形眼睛，平嘴）
-// ─────────────────────────────────────────────
-
-const FRAME_DYING_1: PixelFrame = [
-  [".", ".", ".", "H", "H", ".", ".", "."],
-  [".", ".", "H", "H", "H", "H", ".", "."],
-  [".", ".", ".", "S", "S", ".", ".", "."],
-  [".", ".", "S", "E", "S", "E", "S", "."], // X形眼睛
-  [".", ".", "S", "E", "S", "E", "S", "."],
-  [".", ".", "S", "S", "S", "S", ".", "."],
-  [".", ".", ".", "S", "S", ".", ".", "."],
-  [".", ".", ".", "C_DYING", "C_DYING", ".", ".", "."],
-  [".", ".", "C_DYING", "C_DYING", "C_DYING", "C_DYING", ".", "."],
-  [".", ".", "C_DYING", "C_DYING", "C_DYING", "C_DYING", ".", "."],
-  [".", ".", "C_DYING", "C_DYING", "C_DYING", "C_DYING", ".", "."],
-  [".", ".", "C_DYING", "C_DYING", "C_DYING", "C_DYING", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-];
-
-const FRAME_DYING_2: PixelFrame = [
-  [".", ".", ".", "H", "H", ".", ".", "."],
-  [".", ".", "H", "H", "H", "H", ".", "."],
-  [".", ".", ".", "S", "S", ".", ".", "."],
-  [".", ".", "S", "E", "S", "E", "S", "."],
-  [".", ".", "S", "E", "S", "E", "S", "."],
-  [".", ".", "S", "S", "S", "S", ".", "."],
-  [".", ".", ".", "S", "S", ".", ".", "."],
-  [".", ".", ".", "C_DYING", "C_DYING", ".", ".", "."],
-  [".", ".", "C_DYING", "C_DYING", "C_DYING", "C_DYING", ".", "."],
-  [".", ".", "C_DYING", "C_DYING", "C_DYING", "C_DYING", ".", "."],
-  [".", ".", "C_DYING", "C_DYING", "C_DYING", "C_DYING", ".", "."],
-  [".", ".", "C_DYING", "C_DYING", "C_DYING", "C_DYING", ".", "."],
-  [".", "G", ".", ".", ".", ".", ".", "."], // 灰色烟雾
-  [".", ".", "G", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", "G", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-];
-
-// ─────────────────────────────────────────────
-//  DEHYDRATED 状态（橙色，横线眼睛，波浪嘴）
-// ─────────────────────────────────────────────
-
-const FRAME_DEHYDRATED_1: PixelFrame = [
-  [".", ".", ".", "H", "H", ".", ".", "."],
-  [".", ".", "H", "H", "H", "H", ".", "."],
-  [".", ".", ".", "S", "S", ".", ".", "."],
-  [".", ".", "S", "E", "E", "E", "S", "."], // 横线眼睛
-  [".", ".", "S", "S", "S", "S", ".", "."],
-  [".", ".", "S", "S", "M", "S", ".", "."],
-  [".", ".", ".", "S", "S", ".", ".", "."],
-  [".", ".", ".", "C_WEAK", "C_WEAK", ".", ".", "."],
-  [".", ".", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", ".", "."],
-  [".", ".", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", ".", "."],
-  [".", ".", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", ".", "."],
-  [".", ".", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", "R", ".", "."], // 汗滴
-  [".", ".", ".", ".", ".", "R", ".", "."],
-];
-
-const FRAME_DEHYDRATED_2: PixelFrame = [
-  [".", ".", ".", "H", "H", ".", ".", "."],
-  [".", ".", "H", "H", "H", "H", ".", "."],
-  [".", ".", ".", "S", "S", ".", ".", "."],
-  [".", ".", "S", "E", "E", "E", "S", "."],
-  [".", ".", "S", "S", "S", "S", ".", "."],
-  [".", ".", "S", "M", "S", "M", "S", "."], // 波浪嘴
-  [".", ".", ".", "S", "S", ".", ".", "."],
-  [".", ".", ".", "C_WEAK", "C_WEAK", ".", ".", "."],
-  [".", ".", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", ".", "."],
-  [".", ".", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", ".", "."],
-  [".", ".", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", ".", "."],
-  [".", ".", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", "R", "."],
-  [".", ".", ".", ".", ".", "R", ".", "."],
-];
-
-// ─────────────────────────────────────────────
-//  NORMAL 状态（蓝色，圆点眼睛，小嘴）
+//  NORMAL STATE (Cyan body, happy expression)
 // ─────────────────────────────────────────────
 
 const FRAME_NORMAL_1: PixelFrame = [
-  [".", ".", ".", "H", "H", ".", ".", "."],
-  [".", ".", "H", "H", "H", "H", ".", "."],
-  [".", ".", ".", "S", "S", ".", ".", "."],
-  [".", ".", "S", "E", "S", "E", "S", "."], // 圆点眼睛
-  [".", ".", "S", "E1", "S", "E1", "S", "."], // 高光
-  [".", ".", "S", "S", "S", "S", ".", "."],
-  [".", ".", ".", "S", "S", ".", ".", "."],
-  [".", ".", ".", "C_NORMAL", "C_NORMAL", ".", ".", "."],
-  [".", ".", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", ".", "."],
-  [".", ".", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", ".", "."],
-  [".", ".", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", ".", "."],
-  [".", ".", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
+  // Head (rows 0-6) - oversized, simple shape with outline
+  [".", ".", "BL", "BL", "BL", "BL", "BL", "BL", ".", "."],
+  [".", "BL", "HR", "HR", "HR", "HR", "HR", "HR", "BL", "."],
+  ["BL", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "BL"],
+  ["BL", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "BL"],
+  ["BL", "SK", "EY", "SK", "SK", "SK", "EY", "SK", "SK", "BL"],  // 1-pixel eyes
+  ["BL", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "BL"],  // neutral mouth
+  ["BL", "BL", "SK", "SK", "SK", "SK", "SK", "SK", "BL", "BL"],
+  // Body (rows 7-11) - smaller, simple rectangle
+  [".", "BL", "BL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "BL", "BL", "."],
+  [".", "BL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "BL", "."],
+  [".", "BL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "BL", "."],
+  [".", ".", "BL", "BL", "C_NORMAL", "C_NORMAL", "BL", "BL", ".", "."],
+  [".", ".", ".", "BL", "BL", "BL", "BL", ".", ".", "."],
 ];
 
 const FRAME_NORMAL_2: PixelFrame = [
-  [".", ".", ".", "H", "H", ".", ".", "."],
-  [".", ".", "H", "H", "H", "H", ".", "."],
-  [".", ".", ".", "S", "S", ".", ".", "."],
-  [".", ".", "S", "E", "S", "E", "S", "."],
-  [".", ".", "S", "E1", "S", "E1", "S", "."],
-  [".", ".", "S", "S", "M", "S", ".", "."], // 小嘴
-  [".", ".", ".", "S", "S", ".", ".", "."],
-  [".", ".", ".", "C_NORMAL", "C_NORMAL", ".", ".", "."],
-  [".", ".", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", ".", "."],
-  [".", ".", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", ".", "."],
-  [".", ".", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", ".", "."],
-  [".", ".", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
+  [".", ".", "BL", "BL", "BL", "BL", "BL", "BL", ".", "."],
+  [".", "BL", "HR", "HR", "HR", "HR", "HR", "HR", "BL", "."],
+  ["BL", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "BL"],
+  ["BL", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "BL"],
+  ["BL", "SK", "EY", "SK", "SK", "SK", "EY", "SK", "SK", "BL"],
+  ["BL", "SK", "SK", "SK", "BL", "BL", "SK", "SK", "SK", "BL"],  // small smile
+  ["BL", "BL", "SK", "SK", "SK", "SK", "SK", "SK", "BL", "BL"],
+  [".", "BL", "BL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "BL", "BL", "."],
+  [".", "BL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "BL", "."],
+  [".", "BL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "BL", "."],
+  [".", ".", "BL", "BL", "C_NORMAL", "C_NORMAL", "BL", "BL", ".", "."],
+  [".", ".", ".", "BL", "BL", "BL", "BL", ".", ".", "."],
 ];
 
 // ─────────────────────────────────────────────
-//  GOOD 状态（绿色，圆点眼睛，微笑）
+//  GOOD STATE (Green body, bigger smile)
 // ─────────────────────────────────────────────
 
 const FRAME_GOOD_1: PixelFrame = [
-  [".", ".", ".", "H", "H", ".", ".", "."],
-  [".", ".", "H", "H", "H", "H", ".", "."],
-  [".", ".", ".", "S", "S", ".", ".", "."],
-  [".", ".", "S", "E", "S", "E", "S", "."],
-  [".", ".", "S", "E1", "S", "E1", "S", "."],
-  [".", ".", "S", "S", "S", "S", ".", "."],
-  [".", ".", "S", "S", "M", "S", ".", "."], // 微笑
-  [".", ".", ".", "C_GOOD", "C_GOOD", ".", ".", "."],
-  [".", ".", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", ".", "."],
-  [".", ".", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", ".", "."],
-  [".", ".", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", ".", "."],
-  [".", ".", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
+  [".", ".", "BL", "BL", "BL", "BL", "BL", "BL", ".", "."],
+  [".", "BL", "HR", "HR", "HR", "HR", "HR", "HR", "BL", "."],
+  ["BL", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "BL"],
+  ["BL", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "BL"],
+  ["BL", "SK", "EY", "SK", "SK", "SK", "EY", "SK", "SK", "BL"],
+  ["BL", "SK", "SK", "SK", "BL", "BL", "SK", "SK", "SK", "BL"],  // smile
+  ["BL", "BL", "SK", "SK", "SK", "SK", "SK", "SK", "BL", "BL"],
+  [".", "BL", "BL", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "BL", "BL", "."],
+  [".", "BL", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "BL", "."],
+  [".", "BL", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "BL", "."],
+  [".", ".", "BL", "BL", "C_GOOD", "C_GOOD", "BL", "BL", ".", "."],
+  [".", ".", ".", "BL", "BL", "BL", "BL", ".", ".", "."],
 ];
 
 const FRAME_GOOD_2: PixelFrame = [
-  [".", ".", ".", "H", "H", ".", ".", "."],
-  [".", ".", "H", "H", "H", "H", ".", "."],
-  [".", ".", ".", "S", "S", ".", ".", "."],
-  [".", ".", "S", "E", "S", "E", "S", "."],
-  [".", ".", "S", "E1", "S", "E1", "S", "."],
-  [".", ".", "S", "S", "M", "S", ".", "."],
-  [".", ".", ".", "M", "M", ".", ".", "."], // 微笑延伸
-  [".", ".", ".", "C_GOOD", "C_GOOD", ".", ".", "."],
-  [".", ".", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", ".", "."],
-  [".", ".", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", ".", "."],
-  [".", ".", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", ".", "."],
-  [".", ".", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
+  [".", ".", "BL", "BL", "BL", "BL", "BL", "BL", ".", "."],
+  [".", "BL", "HR", "HR", "HR", "HR", "HR", "HR", "BL", "."],
+  ["BL", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "BL"],
+  ["BL", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "BL"],
+  ["BL", "SK", "EY", "SK", "SK", "SK", "EY", "SK", "SK", "BL"],
+  ["BL", "SK", "SK", "SK", "BL", "BL", "BL", "SK", "SK", "BL"],  // wider smile
+  ["BL", "BL", "SK", "SK", "SK", "SK", "SK", "SK", "BL", "BL"],
+  [".", "BL", "BL", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "BL", "BL", "."],
+  [".", "BL", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "BL", "."],
+  [".", "BL", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "BL", "."],
+  [".", ".", "BL", "BL", "C_GOOD", "C_GOOD", "BL", "BL", ".", "."],
+  [".", ".", ".", "BL", "BL", "BL", "BL", ".", ".", "."],
 ];
 
 // ─────────────────────────────────────────────
-//  HAPPY 状态（亮绿，弧形眼睛，大笑，星星特效）
+//  HAPPY STATE (Bright green, stars effect)
 // ─────────────────────────────────────────────
 
 const FRAME_HAPPY_1: PixelFrame = [
-  [".", ".", ".", "H", "H", ".", ".", "."],
-  [".", ".", "H", "H", "H", "H", ".", "."],
-  [".", ".", ".", "S", "S", ".", ".", "."],
-  [".", ".", "S", ".", "S", ".", "S", "."], // 弧形眼睛
-  [".", ".", ".", "E", ".", "E", ".", "."],
-  [".", ".", "S", "S", "S", "S", ".", "."],
-  [".", ".", "S", "S", "M", "S", ".", "."],
-  [".", ".", ".", "M", "M", ".", ".", "."], // 大笑
-  [".", ".", ".", "C_HAPPY", "C_HAPPY", ".", ".", "."],
-  [".", ".", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", ".", "."],
-  [".", ".", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", ".", "."],
-  [".", ".", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", ".", "."],
-  [".", ".", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", ".", "."],
-  ["G", ".", ".", ".", ".", ".", ".", "."], // 星星
-  [".", ".", ".", ".", ".", ".", "G", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
+  ["ST", ".", "BL", "BL", "BL", "BL", "BL", "BL", ".", "ST"],  // stars
+  [".", "BL", "HR", "HR", "HR", "HR", "HR", "HR", "BL", "."],
+  ["BL", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "BL"],
+  ["BL", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "BL"],
+  ["BL", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "BL"],  // closed eyes (happy)
+  ["BL", "SK", "SK", "BL", "BL", "BL", "BL", "SK", "SK", "BL"],  // big smile
+  ["BL", "BL", "SK", "SK", "SK", "SK", "SK", "SK", "BL", "BL"],
+  [".", "BL", "BL", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "BL", "BL", "."],
+  [".", "BL", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "BL", "."],
+  [".", "BL", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "BL", "."],
+  [".", ".", "BL", "BL", "C_HAPPY", "C_HAPPY", "BL", "BL", ".", "."],
+  [".", ".", ".", "BL", "BL", "BL", "BL", ".", ".", "."],
 ];
 
 const FRAME_HAPPY_2: PixelFrame = [
-  [".", ".", ".", "H", "H", ".", ".", "."],
-  [".", ".", "H", "H", "H", "H", ".", "."],
-  [".", ".", ".", "S", "S", ".", ".", "."],
-  [".", ".", "S", ".", "S", ".", "S", "."],
-  [".", ".", ".", "E", ".", "E", ".", "."],
-  [".", ".", "S", "S", "S", "S", ".", "."],
-  [".", ".", "S", "M", "M", "M", "S", "."], // 大笑
-  [".", ".", ".", "M", "M", ".", ".", "."],
-  [".", ".", ".", "C_HAPPY", "C_HAPPY", ".", ".", "."],
-  [".", ".", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", ".", "."],
-  [".", ".", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", ".", "."],
-  [".", ".", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", ".", "."],
-  [".", ".", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", "G", ".", ".", ".", ".", ".", "G"],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-];
-
-const FRAME_HAPPY_3: PixelFrame = [
-  [".", ".", ".", "H", "H", ".", ".", "."],
-  [".", ".", "H", "H", "H", "H", ".", "."],
-  [".", ".", ".", "S", "S", ".", ".", "."],
-  [".", ".", "S", ".", "S", ".", "S", "."],
-  [".", ".", ".", "E", ".", "E", ".", "."],
-  [".", ".", "S", "S", "S", "S", ".", "."],
-  [".", ".", "S", "S", "M", "S", ".", "."],
-  [".", ".", ".", "M", "M", ".", ".", "."],
-  [".", ".", ".", "C_HAPPY", "C_HAPPY", ".", ".", "."],
-  [".", ".", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", ".", "."],
-  [".", ".", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", ".", "."],
-  [".", ".", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", ".", "."],
-  [".", ".", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "G"],
-  ["G", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-];
-
-const FRAME_HAPPY_4: PixelFrame = [
-  [".", ".", ".", "H", "H", ".", ".", "."],
-  [".", ".", "H", "H", "H", "H", ".", "."],
-  [".", ".", ".", "S", "S", ".", ".", "."],
-  [".", ".", "S", ".", "S", ".", "S", "."],
-  [".", ".", ".", "E", ".", "E", ".", "."],
-  [".", ".", "S", "S", "S", "S", ".", "."],
-  [".", ".", "S", "M", "M", "M", "S", "."],
-  [".", ".", ".", "M", "M", ".", ".", "."],
-  [".", ".", ".", "C_HAPPY", "C_HAPPY", ".", ".", "."],
-  [".", ".", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", ".", "."],
-  [".", ".", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", ".", "."],
-  [".", ".", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", ".", "."],
-  [".", ".", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", "G", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
+  [".", "ST", "BL", "BL", "BL", "BL", "BL", "BL", "ST", "."],
+  [".", "BL", "HR", "HR", "HR", "HR", "HR", "HR", "BL", "."],
+  ["BL", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "BL"],
+  ["BL", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "BL"],
+  ["BL", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "BL"],
+  ["BL", "SK", "SK", "BL", "BL", "BL", "BL", "SK", "SK", "BL"],
+  ["BL", "BL", "SK", "SK", "SK", "SK", "SK", "SK", "BL", "BL"],
+  [".", "BL", "BL", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "BL", "BL", "."],
+  [".", "BL", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "BL", "."],
+  [".", "BL", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "BL", "."],
+  [".", ".", "BL", "BL", "C_HAPPY", "C_HAPPY", "BL", "BL", ".", "."],
+  [".", ".", ".", "BL", "BL", "BL", "BL", ".", ".", "."],
 ];
 
 // ─────────────────────────────────────────────
-//  OVERFLOW 状态（紫色，大圆眼睛，张嘴，水滴特效）
+//  OVERFLOW STATE (Purple body, water droplets)
 // ─────────────────────────────────────────────
 
 const FRAME_OVERFLOW_1: PixelFrame = [
-  [".", ".", ".", "H", "H", ".", ".", "."],
-  [".", ".", "H", "H", "H", "H", ".", "."],
-  [".", ".", ".", "S", "S", ".", ".", "."],
-  [".", ".", "S", "E", "E", "E", "S", "."], // 大圆眼睛
-  [".", ".", "S", "E", "E", "E", "S", "."],
-  [".", ".", "S", "S", "S", "S", ".", "."],
-  [".", ".", "S", "M", "M", "M", "S", "."], // 张嘴
-  [".", ".", ".", "M", "M", ".", ".", "."],
-  [".", ".", ".", "C_OVERFLOW", "C_OVERFLOW", ".", ".", "."],
-  [".", ".", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", ".", "."],
-  [".", ".", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", ".", "."],
-  [".", ".", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", ".", "."],
-  [".", ".", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", ".", "."],
-  ["P", ".", ".", ".", ".", ".", ".", "."], // 水滴
-  [".", ".", ".", ".", ".", ".", "P", "."],
-  [".", ".", ".", "P", ".", ".", ".", "."],
+  ["DR", ".", "BL", "BL", "BL", "BL", "BL", "BL", ".", "DR"],  // droplets
+  [".", "BL", "HR", "HR", "HR", "HR", "HR", "HR", "BL", "."],
+  ["BL", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "BL"],
+  ["BL", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "BL"],
+  ["BL", "SK", "EY", "SK", "SK", "SK", "EY", "SK", "SK", "BL"],
+  ["BL", "SK", "SK", "SK", "BL", "BL", "SK", "SK", "SK", "BL"],
+  ["BL", "BL", "SK", "SK", "SK", "SK", "SK", "SK", "BL", "BL"],
+  [".", "BL", "BL", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "BL", "BL", "."],
+  [".", "BL", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "BL", "."],
+  [".", "BL", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "BL", "."],
+  [".", ".", "BL", "BL", "C_OVERFLOW", "C_OVERFLOW", "BL", "BL", ".", "."],
+  [".", ".", "DR", "BL", "BL", "BL", "BL", "DR", ".", "."],  // droplets at bottom
 ];
 
 const FRAME_OVERFLOW_2: PixelFrame = [
-  [".", ".", ".", "H", "H", ".", ".", "."],
-  [".", ".", "H", "H", "H", "H", ".", "."],
-  [".", ".", ".", "S", "S", ".", ".", "."],
-  [".", ".", "S", "E", "E", "E", "S", "."],
-  [".", ".", "S", "E", "E", "E", "S", "."],
-  [".", ".", "S", "S", "S", "S", ".", "."],
-  [".", ".", "S", "M", "M", "M", "S", "."],
-  [".", ".", ".", "M", "M", ".", ".", "."],
-  [".", ".", ".", "C_OVERFLOW", "C_OVERFLOW", ".", ".", "."],
-  [".", ".", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", ".", "."],
-  [".", ".", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", ".", "."],
-  [".", ".", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", ".", "."],
-  [".", ".", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", ".", "."],
-  [".", ".", ".", ".", ".", "P", ".", "."],
-  [".", "P", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", "P", "."],
+  [".", "DR", "BL", "BL", "BL", "BL", "BL", "BL", "DR", "."],
+  [".", "BL", "HR", "HR", "HR", "HR", "HR", "HR", "BL", "."],
+  ["BL", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "BL"],
+  ["BL", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "BL"],
+  ["BL", "SK", "EY", "SK", "SK", "SK", "EY", "SK", "SK", "BL"],
+  ["BL", "SK", "SK", "SK", "BL", "BL", "BL", "SK", "SK", "BL"],  // wide smile
+  ["BL", "BL", "SK", "SK", "SK", "SK", "SK", "SK", "BL", "BL"],
+  [".", "BL", "BL", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "BL", "BL", "."],
+  [".", "BL", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "BL", "."],
+  [".", "BL", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "BL", "."],
+  [".", ".", "BL", "BL", "C_OVERFLOW", "C_OVERFLOW", "BL", "BL", ".", "."],
+  [".", ".", ".", "BL", "BL", "BL", "BL", ".", ".", "."],
 ];
 
 // ─────────────────────────────────────────────
-//  动画配置
+//  DEHYDRATED STATE (Orange body, weak expression, sweat)
+// ─────────────────────────────────────────────
+
+const FRAME_DEHYDRATED_1: PixelFrame = [
+  [".", ".", "BL", "BL", "BL", "BL", "BL", "BL", ".", "."],
+  [".", "BL", "HR", "HR", "HR", "HR", "HR", "HR", "BL", "."],
+  ["BL", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "BL"],
+  ["BL", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "BL"],
+  ["BL", "SK", "SK", "BL", "SK", "SK", "BL", "SK", "SK", "BL"],  // horizontal eyes (tired)
+  ["BL", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "BL"],
+  ["BL", "BL", "SK", "SK", "SK", "SK", "SK", "SK", "BL", "BL"],
+  [".", "BL", "BL", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "BL", "BL", "."],
+  [".", "BL", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "BL", "."],
+  [".", "BL", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "BL", "."],
+  [".", ".", "BL", "BL", "C_WEAK", "C_WEAK", "BL", "BL", "SW", "."],  // sweat
+  [".", ".", ".", "BL", "BL", "BL", "BL", ".", "SW", "."],
+];
+
+const FRAME_DEHYDRATED_2: PixelFrame = [
+  [".", ".", "BL", "BL", "BL", "BL", "BL", "BL", ".", "."],
+  [".", "BL", "HR", "HR", "HR", "HR", "HR", "HR", "BL", "."],
+  ["BL", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "BL"],
+  ["BL", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "BL"],
+  ["BL", "SK", "SK", "BL", "SK", "SK", "BL", "SK", "SK", "BL"],
+  ["BL", "SK", "SK", "SK", "BL", "BL", "SK", "SK", "SK", "BL"],  // wavy mouth
+  ["BL", "BL", "SK", "SK", "SK", "SK", "SK", "SK", "BL", "BL"],
+  [".", "BL", "BL", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "BL", "BL", "."],
+  [".", "BL", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "BL", "."],
+  [".", "BL", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "BL", "."],
+  [".", ".", "BL", "BL", "C_WEAK", "C_WEAK", "BL", "BL", ".", "SW"],
+  [".", ".", ".", "BL", "BL", "BL", "BL", ".", ".", "SW"],
+];
+
+// ─────────────────────────────────────────────
+//  DYING STATE (Gray body, X eyes, smoke)
+// ─────────────────────────────────────────────
+
+const FRAME_DYING_1: PixelFrame = [
+  [".", ".", "BL", "BL", "BL", "BL", "BL", "BL", ".", "."],
+  [".", "BL", "HR", "HR", "HR", "HR", "HR", "HR", "BL", "."],
+  ["BL", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "BL"],
+  ["BL", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "BL"],
+  ["BL", "SK", "BL", "SK", "BL", "BL", "SK", "BL", "SK", "BL"],  // X eyes
+  ["BL", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "BL"],  // flat mouth
+  ["BL", "BL", "SK", "SK", "SK", "SK", "SK", "SK", "BL", "BL"],
+  [".", "BL", "BL", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "BL", "BL", "."],
+  [".", "BL", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "BL", "."],
+  [".", "BL", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "BL", "."],
+  [".", ".", "BL", "BL", "C_DYING", "C_DYING", "BL", "BL", ".", "."],
+  [".", ".", ".", "BL", "BL", "BL", "BL", ".", ".", "."],
+];
+
+const FRAME_DYING_2: PixelFrame = [
+  [".", ".", "BL", "BL", "BL", "BL", "BL", "BL", ".", "."],
+  [".", "BL", "HR", "HR", "HR", "HR", "HR", "HR", "BL", "."],
+  ["BL", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "HR", "BL"],
+  ["BL", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "BL"],
+  ["BL", "SK", "BL", "SK", "BL", "BL", "SK", "BL", "SK", "BL"],
+  ["BL", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "SK", "BL"],
+  ["BL", "BL", "SK", "SK", "SK", "SK", "SK", "SK", "BL", "BL"],
+  [".", "BL", "BL", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "BL", "BL", "."],
+  [".", "BL", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "BL", "."],
+  [".", "BL", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "BL", "."],
+  [".", ".", "BL", "BL", "C_DYING", "C_DYING", "BL", "BL", "ST", "."],  // smoke/star
+  [".", ".", "ST", "BL", "BL", "BL", "BL", ".", ".", "."],
+];
+
+// ─────────────────────────────────────────────
+//  Export Animation Configurations
 // ─────────────────────────────────────────────
 
 export const PET_ANIMATIONS: Record<PetState, AnimationConfig> = {
   dying: {
     frames: [FRAME_DYING_1, FRAME_DYING_2],
-    interval: 400,
+    interval: 800,
     loop: true,
   },
   dehydrated: {
     frames: [FRAME_DEHYDRATED_1, FRAME_DEHYDRATED_2],
-    interval: 350,
+    interval: 600,
     loop: true,
   },
   normal: {
     frames: [FRAME_NORMAL_1, FRAME_NORMAL_2],
-    interval: 500,
+    interval: 1000,
     loop: true,
   },
   good: {
     frames: [FRAME_GOOD_1, FRAME_GOOD_2],
-    interval: 400,
+    interval: 800,
     loop: true,
   },
   happy: {
-    frames: [FRAME_HAPPY_1, FRAME_HAPPY_2, FRAME_HAPPY_3, FRAME_HAPPY_4],
-    interval: 200,
+    frames: [FRAME_HAPPY_1, FRAME_HAPPY_2],
+    interval: 400,
     loop: true,
   },
   overflow: {
     frames: [FRAME_OVERFLOW_1, FRAME_OVERFLOW_2],
-    interval: 300,
+    interval: 400,
     loop: true,
   },
-};
-
-// ─────────────────────────────────────────────
-//  辅助函数
-// ─────────────────────────────────────────────
-
-/**
- * 获取指定状态的动画配置
- */
-export const getAnimationForState = (state: PetState): AnimationConfig => {
-  return PET_ANIMATIONS[state];
-};
-
-/**
- * 获取帧的尺寸
- */
-export const getFrameSize = (frame: PixelFrame): { width: number; height: number } => {
-  return {
-    height: frame.length,
-    width: frame[0]?.length ?? 0,
-  };
 };

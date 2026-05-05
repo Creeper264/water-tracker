@@ -1,327 +1,223 @@
 import { Palette, PixelFrame, AnimationConfig, PetState } from "../types";
 
-// ─────────────────────────────────────────────
-//  小狗调色盘定义
-// ─────────────────────────────────────────────
-
+// 8-BIT DOG PALETTE (Limited colors with black outline)
 export const DOG_PALETTE: Palette = {
-  // 毛色（棕色小狗风格）
-  F: "#A0522D", // 毛色
-  F1: "#8B4513", // 毛色阴影
-  F2: "#DEB887", // 浅毛色（肚子）
+  BL: "#000000",  // Black outline (ESSENTIAL!)
+  FC: "#A85828",  // Fur color (brown dog)
+  FL: "#E8D0B0", // Light fur (belly)
+  PK: "#E85858", // Pink tongue
+  BK: "#201810", // Dark nose
+  EY: "#000000", // Eyes (black)
+  WH: "#FFFFFF", // White highlight
 
-  // 眼睛
-  E: "#333333", // 眼睛
-  E1: "#ffffff", // 眼睛高光
+  // State colors
+  C_DYING: "#787878",
+  C_WEAK: "#E8A030",
+  C_NORMAL: "#A85828",
+  C_GOOD: "#50C878",
+  C_HAPPY: "#70E090",
+  C_OVERFLOW: "#B078D8",
 
-  // 鼻子
-  N: "#2F1810", // 鼻子（深色）
-
-  // 舌头
-  T: "#FF6B6B", // 舌头
-
-  // 特效颜色
-  W: "#ffffff",
-  G: "#ffd700",
-  R: "#ff4757",
-  P: "#a55eea",
-
-  // 状态颜色
-  C_DYING: "#747d8c",
-  C_WEAK: "#ffa502",
-  C_NORMAL: "#A0522D",
-  C_GOOD: "#2ed573",
-  C_HAPPY: "#00e676",
-  C_OVERFLOW: "#a55eea",
+  // Effects
+  ST: "#F8D830",
+  SW: "#A04040",
+  DR: "#B078D8",
 
   ".": null,
 };
 
-// ─────────────────────────────────────────────
-//  小狗 DYING 状态
-// ─────────────────────────────────────────────
-
-const DOG_FRAME_DYING_1: PixelFrame = [
-  [".", "F", ".", ".", ".", ".", "F", "."],
-  ["F", "F", ".", ".", ".", ".", "F", "F"],
-  ["F", "F", "F", "F", "F", "F", "F", "F"],
-  [".", "F", "F", "F", "F", "F", "F", "."],
-  [".", ".", "E", "F", "F", "E", ".", "."], // X形眼睛
-  [".", ".", "E", "F", "F", "E", ".", "."],
-  [".", ".", "F", "N", "F", "F", ".", "."],
-  [".", ".", ".", "C_DYING", "C_DYING", ".", ".", "."],
-  [".", ".", "C_DYING", "C_DYING", "C_DYING", "C_DYING", ".", "."],
-  [".", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "."],
-  [".", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "."],
-  [".", ".", "C_DYING", "C_DYING", "C_DYING", "C_DYING", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
+// DOG NORMAL STATE
+const DOG_NORMAL_1: PixelFrame = [
+  [".", "BL", "FC", "FC", ".", ".", "FC", "FC", "BL", "."],  // floppy ears
+  [".", ".", "BL", "BL", "BL", "BL", "BL", "BL", ".", "."],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FC", "EY", "FC", "FC", "FC", "EY", "FC", "FC", "BL"],  // eyes
+  ["BL", "FL", "FL", "FC", "BK", "FC", "FC", "FL", "FL", "BL"],  // nose
+  ["BL", "BL", "FL", "FL", "FL", "FL", "FL", "FL", "BL", "BL"],
+  [".", "BL", "BL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "BL", "BL", "."],
+  [".", "BL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "BL", "."],
+  [".", "BL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "BL", "."],
+  [".", ".", "BL", "BL", "C_NORMAL", "C_NORMAL", "BL", "BL", ".", "."],
+  [".", ".", ".", "BL", "BL", "BL", "BL", ".", ".", "."],
 ];
 
-const DOG_FRAME_DYING_2: PixelFrame = [
-  [".", "F", ".", ".", ".", ".", "F", "."],
-  ["F", "F", ".", ".", ".", ".", "F", "F"],
-  ["F", "F", "F", "F", "F", "F", "F", "F"],
-  [".", "F", "F", "F", "F", "F", "F", "."],
-  [".", ".", "E", "F", "F", "E", ".", "."],
-  [".", ".", "E", "F", "F", "E", ".", "."],
-  [".", ".", "F", "N", "F", "F", ".", "."],
-  [".", ".", ".", "C_DYING", "C_DYING", ".", ".", "."],
-  [".", ".", "C_DYING", "C_DYING", "C_DYING", "C_DYING", ".", "."],
-  [".", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "."],
-  [".", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "."],
-  [".", ".", "C_DYING", "C_DYING", "C_DYING", "C_DYING", ".", "."],
-  [".", "G", ".", ".", ".", ".", ".", "."],
-  [".", ".", "G", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", "G", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
+const DOG_NORMAL_2: PixelFrame = [
+  [".", "BL", "FC", "FC", ".", ".", "FC", "FC", "BL", "."],
+  [".", ".", "BL", "BL", "BL", "BL", "BL", "BL", ".", "."],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FC", "EY", "FC", "FC", "FC", "EY", "FC", "FC", "BL"],
+  ["BL", "FL", "FL", "FL", "BK", "FL", "FL", "FL", "FL", "BL"],  // small mouth
+  ["BL", "BL", "FL", "FL", "FL", "FL", "FL", "FL", "BL", "BL"],
+  [".", "BL", "BL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "BL", "BL", "."],
+  [".", "BL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "BL", "."],
+  [".", "BL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "BL", "."],
+  [".", ".", "BL", "BL", "C_NORMAL", "C_NORMAL", "BL", "BL", ".", "."],
+  [".", ".", ".", "BL", "BL", "BL", "BL", ".", ".", "."],
 ];
 
-// ─────────────────────────────────────────────
-//  小狗 DEHYDRATED 状态
-// ─────────────────────────────────────────────
-
-const DOG_FRAME_DEHYDRATED_1: PixelFrame = [
-  [".", "F", ".", ".", ".", ".", "F", "."],
-  ["F", "F", ".", ".", ".", ".", "F", "F"],
-  ["F", "F", "F", "F", "F", "F", "F", "F"],
-  [".", "F", "F", "F", "F", "F", "F", "."],
-  [".", ".", "E", "E", "E", "E", ".", "."], // 横线眼睛
-  [".", ".", "F", "F", "F", "F", ".", "."],
-  [".", ".", "F", "N", "F", "F", ".", "."],
-  [".", ".", ".", "C_WEAK", "C_WEAK", ".", ".", "."],
-  [".", ".", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", ".", "."],
-  [".", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "."],
-  [".", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "."],
-  [".", ".", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", ".", "."],
-  [".", ".", ".", ".", ".", "R", ".", "."], // 汗滴
-  [".", ".", ".", ".", ".", "R", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
+// DOG GOOD STATE (tail wag implied)
+const DOG_GOOD_1: PixelFrame = [
+  [".", "BL", "FC", "FC", ".", ".", "FC", "FC", "BL", "."],
+  [".", ".", "BL", "BL", "BL", "BL", "BL", "BL", ".", "."],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],  // closed eyes
+  ["BL", "FL", "FL", "FL", "BK", "BL", "BL", "FL", "FL", "BL"],  // smile
+  ["BL", "BL", "FL", "FL", "FL", "FL", "FL", "FL", "BL", "BL"],
+  [".", "BL", "BL", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "BL", "BL", "."],
+  [".", "BL", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "BL", "."],
+  [".", "BL", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "BL", "."],
+  [".", ".", "BL", "BL", "C_GOOD", "C_GOOD", "BL", "BL", ".", "."],
+  [".", ".", ".", "BL", "BL", "BL", "BL", ".", ".", "."],
 ];
 
-const DOG_FRAME_DEHYDRATED_2: PixelFrame = [
-  [".", "F", ".", ".", ".", ".", "F", "."],
-  ["F", "F", ".", ".", ".", ".", "F", "F"],
-  ["F", "F", "F", "F", "F", "F", "F", "F"],
-  [".", "F", "F", "F", "F", "F", "F", "."],
-  [".", ".", "E", "E", "E", "E", ".", "."],
-  [".", ".", "F", "F", "F", "F", ".", "."],
-  [".", ".", "F", "N", "F", "F", ".", "."],
-  [".", ".", ".", "C_WEAK", "C_WEAK", ".", ".", "."],
-  [".", ".", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", ".", "."],
-  [".", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "."],
-  [".", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "."],
-  [".", ".", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", ".", "."],
-  [".", ".", ".", ".", ".", ".", "R", "."],
-  [".", ".", ".", ".", ".", "R", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
+const DOG_GOOD_2: PixelFrame = [
+  [".", "BL", "FC", "FC", ".", ".", "FC", "FC", "BL", "."],
+  [".", ".", "BL", "BL", "BL", "BL", "BL", "BL", ".", "."],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FL", "FL", "FL", "BK", "BL", "BL", "FL", "FL", "BL"],
+  ["BL", "BL", "FL", "FL", "FL", "FL", "FL", "FL", "BL", "BL"],
+  [".", "BL", "BL", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "BL", "BL", "."],
+  [".", "BL", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "BL", "."],
+  [".", "BL", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "BL", "."],
+  [".", ".", "BL", "BL", "C_GOOD", "C_GOOD", "BL", "BL", ".", "."],
+  [".", ".", ".", "BL", "BL", "BL", "BL", ".", ".", "."],
 ];
 
-// ─────────────────────────────────────────────
-//  小狗 NORMAL 状态
-// ─────────────────────────────────────────────
-
-const DOG_FRAME_NORMAL_1: PixelFrame = [
-  [".", "F", ".", ".", ".", ".", "F", "."],
-  ["F", "F", ".", ".", ".", ".", "F", "F"],
-  ["F", "F", "F", "F", "F", "F", "F", "F"],
-  [".", "F", "F", "F", "F", "F", "F", "."],
-  [".", ".", "E", "F", "F", "E", ".", "."], // 圆点眼睛
-  [".", ".", "E1", "F", "F", "E1", ".", "."], // 高光
-  [".", ".", "F", "N", "F", "F", ".", "."],
-  [".", ".", ".", "C_NORMAL", "C_NORMAL", ".", ".", "."],
-  [".", ".", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", ".", "."],
-  [".", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "."],
-  [".", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "."],
-  [".", ".", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
+// DOG HAPPY STATE (tongue out)
+const DOG_HAPPY_1: PixelFrame = [
+  ["ST", "BL", "FC", "FC", ".", ".", "FC", "FC", "BL", "ST"],  // stars
+  [".", ".", "BL", "BL", "BL", "BL", "BL", "BL", ".", "."],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],  // closed eyes
+  ["BL", "FL", "FL", "FL", "BK", "BL", "BL", "PK", "PK", "BL"],  // tongue
+  ["BL", "BL", "FL", "FL", "FL", "PK", "PK", "PK", "BL", "BL"],
+  [".", "BL", "BL", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "BL", "BL", "."],
+  [".", "BL", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "BL", "."],
+  [".", "BL", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "BL", "."],
+  [".", ".", "BL", "BL", "C_HAPPY", "C_HAPPY", "BL", "BL", ".", "."],
+  [".", ".", ".", "BL", "BL", "BL", "BL", ".", ".", "."],
 ];
 
-const DOG_FRAME_NORMAL_2: PixelFrame = [
-  [".", "F", ".", ".", ".", ".", "F", "."],
-  ["F", "F", ".", ".", ".", ".", "F", "F"],
-  ["F", "F", "F", "F", "F", "F", "F", "F"],
-  [".", "F", "F", "F", "F", "F", "F", "."],
-  [".", ".", "E", "F", "F", "E", ".", "."],
-  [".", ".", "E1", "F", "F", "E1", ".", "."],
-  [".", ".", "F", "N", "F", "F", ".", "."],
-  [".", ".", ".", "C_NORMAL", "C_NORMAL", ".", ".", "."],
-  [".", ".", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", ".", "."],
-  [".", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "."],
-  [".", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", "."],
-  [".", ".", "C_NORMAL", "C_NORMAL", "C_NORMAL", "C_NORMAL", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
+const DOG_HAPPY_2: PixelFrame = [
+  [".", "ST", "BL", "BL", "BL", "BL", "BL", "BL", "ST", "."],
+  [".", ".", "BL", "BL", "BL", "BL", "BL", "BL", ".", "."],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FL", "FL", "FL", "BK", "BL", "PK", "PK", "PK", "BL"],
+  ["BL", "BL", "FL", "FL", "PK", "PK", "PK", "PK", "BL", "BL"],
+  [".", "BL", "BL", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "BL", "BL", "."],
+  [".", "BL", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "BL", "."],
+  [".", "BL", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "BL", "."],
+  [".", ".", "BL", "BL", "C_HAPPY", "C_HAPPY", "BL", "BL", ".", "."],
+  [".", ".", ".", "BL", "BL", "BL", "BL", ".", ".", "."],
 ];
 
-// ─────────────────────────────────────────────
-//  小狗 GOOD 状态
-// ─────────────────────────────────────────────
-
-const DOG_FRAME_GOOD_1: PixelFrame = [
-  [".", "F", ".", ".", ".", ".", "F", "."],
-  ["F", "F", ".", ".", ".", ".", "F", "F"],
-  ["F", "F", "F", "F", "F", "F", "F", "F"],
-  [".", "F", "F", "F", "F", "F", "F", "."],
-  [".", ".", "E", "F", "F", "E", ".", "."], // 闭眼微笑
-  [".", ".", "E", "F", "F", "E", ".", "."],
-  [".", ".", "F", "N", "F", "F", ".", "."],
-  [".", ".", ".", "C_GOOD", "C_GOOD", ".", ".", "."],
-  [".", ".", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", ".", "."],
-  [".", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "."],
-  [".", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "."],
-  [".", ".", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
+// DOG OVERFLOW STATE
+const DOG_OVERFLOW_1: PixelFrame = [
+  ["DR", "BL", "FC", "FC", ".", ".", "FC", "FC", "BL", "DR"],
+  [".", ".", "BL", "BL", "BL", "BL", "BL", "BL", ".", "."],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FC", "EY", "FC", "FC", "FC", "EY", "FC", "FC", "BL"],
+  ["BL", "FL", "FL", "FL", "BK", "BL", "BL", "PK", "PK", "BL"],
+  ["BL", "BL", "FL", "FL", "PK", "PK", "PK", "PK", "BL", "BL"],
+  [".", "BL", "BL", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "BL", "BL", "."],
+  [".", "BL", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "BL", "."],
+  [".", "BL", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "BL", "."],
+  [".", ".", "BL", "BL", "C_OVERFLOW", "C_OVERFLOW", "BL", "BL", ".", "DR"],
+  [".", ".", "DR", "BL", "BL", "BL", "BL", "DR", ".", "."],
 ];
 
-const DOG_FRAME_GOOD_2: PixelFrame = [
-  [".", "F", ".", ".", ".", ".", "F", "."],
-  ["F", "F", ".", ".", ".", ".", "F", "F"],
-  ["F", "F", "F", "F", "F", "F", "F", "F"],
-  [".", "F", "F", "F", "F", "F", "F", "."],
-  [".", ".", "E", "F", "F", "E", ".", "."],
-  [".", ".", "E", "F", "F", "E", ".", "."],
-  [".", ".", "F", "N", "F", "F", ".", "."],
-  [".", ".", ".", "C_GOOD", "C_GOOD", ".", ".", "."],
-  [".", ".", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", ".", "."],
-  [".", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "."],
-  [".", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", "."],
-  [".", ".", "C_GOOD", "C_GOOD", "C_GOOD", "C_GOOD", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
+const DOG_OVERFLOW_2: PixelFrame = [
+  [".", "DR", "BL", "BL", "BL", "BL", "BL", "BL", "DR", "."],
+  [".", ".", "BL", "BL", "BL", "BL", "BL", "BL", ".", "."],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FC", "EY", "FC", "FC", "FC", "EY", "FC", "FC", "BL"],
+  ["BL", "FL", "FL", "FL", "BK", "BL", "PK", "PK", "PK", "BL"],
+  ["BL", "BL", "FL", "FL", "PK", "PK", "PK", "PK", "BL", "BL"],
+  [".", "BL", "BL", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "BL", "BL", "."],
+  [".", "BL", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "BL", "."],
+  [".", "BL", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "BL", "."],
+  [".", ".", "BL", "BL", "C_OVERFLOW", "C_OVERFLOW", "BL", "BL", ".", "."],
+  [".", ".", ".", "BL", "BL", "BL", "BL", ".", "DR", "."],
 ];
 
-// ─────────────────────────────────────────────
-//  小狗 HAPPY 状态（吐舌头）
-// ─────────────────────────────────────────────
-
-const DOG_FRAME_HAPPY_1: PixelFrame = [
-  [".", "F", ".", ".", ".", ".", "F", "."],
-  ["F", "F", ".", ".", ".", ".", "F", "F"],
-  ["F", "F", "F", "F", "F", "F", "F", "F"],
-  [".", "F", "F", "F", "F", "F", "F", "."],
-  [".", ".", "E", "F", "F", "E", ".", "."],
-  [".", ".", "E1", "F", "F", "E1", ".", "."],
-  [".", ".", "F", "N", "F", "F", ".", "."],
-  [".", ".", ".", "C_HAPPY", "C_HAPPY", ".", ".", "."],
-  [".", ".", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", ".", "."],
-  [".", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "."],
-  [".", "C_HAPPY", "C_HAPPY", "T", "T", "C_HAPPY", "C_HAPPY", "."], // 舌头
-  [".", ".", "C_HAPPY", "T", "T", "C_HAPPY", ".", "."],
-  [".", ".", "G", ".", ".", "G", ".", "."], // 星星
-  [".", ".", ".", "G", "G", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
+// DOG DEHYDRATED STATE
+const DOG_DEHYDRATED_1: PixelFrame = [
+  [".", "BL", "FC", "FC", ".", ".", "FC", "FC", "BL", "."],
+  [".", ".", "BL", "BL", "BL", "BL", "BL", "BL", ".", "."],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FC", "FC", "BL", "FC", "FC", "BL", "FC", "FC", "BL"],  // tired eyes
+  ["BL", "FL", "FL", "FL", "BK", "FC", "FC", "FL", "FL", "BL"],
+  ["BL", "BL", "FL", "FL", "FL", "FL", "FL", "FL", "BL", "BL"],
+  [".", "BL", "BL", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "BL", "BL", "."],
+  [".", "BL", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "BL", "."],
+  [".", "BL", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "BL", "."],
+  [".", ".", "BL", "BL", "C_WEAK", "C_WEAK", "BL", "BL", "SW", "."],
+  [".", ".", ".", "BL", "BL", "BL", "BL", ".", "SW", "."],
 ];
 
-const DOG_FRAME_HAPPY_2: PixelFrame = [
-  [".", "F", ".", ".", ".", ".", "F", "."],
-  ["F", "F", ".", ".", ".", ".", "F", "F"],
-  ["F", "F", "F", "F", "F", "F", "F", "F"],
-  [".", "F", "F", "F", "F", "F", "F", "."],
-  [".", ".", "E", "F", "F", "E", ".", "."],
-  [".", ".", "E1", "F", "F", "E1", ".", "."],
-  [".", ".", "F", "N", "F", "F", ".", "."],
-  [".", ".", ".", "C_HAPPY", "C_HAPPY", ".", ".", "."],
-  [".", ".", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", ".", "."],
-  [".", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "C_HAPPY", "."],
-  [".", "C_HAPPY", "C_HAPPY", "C_HAPPY", "T", "C_HAPPY", "C_HAPPY", "."],
-  [".", ".", "C_HAPPY", "C_HAPPY", "T", "C_HAPPY", ".", "."],
-  [".", ".", ".", "G", "G", ".", ".", "."],
-  [".", ".", "G", ".", ".", "G", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
+const DOG_DEHYDRATED_2: PixelFrame = [
+  [".", "BL", "FC", "FC", ".", ".", "FC", "FC", "BL", "."],
+  [".", ".", "BL", "BL", "BL", "BL", "BL", "BL", ".", "."],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FC", "FC", "BL", "FC", "FC", "BL", "FC", "FC", "BL"],
+  ["BL", "FL", "FL", "FL", "BK", "BL", "FL", "FL", "FL", "BL"],  // wavy mouth
+  ["BL", "BL", "FL", "FL", "FL", "FL", "FL", "FL", "BL", "BL"],
+  [".", "BL", "BL", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "BL", "BL", "."],
+  [".", "BL", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "BL", "."],
+  [".", "BL", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "C_WEAK", "BL", "."],
+  [".", ".", "BL", "BL", "C_WEAK", "C_WEAK", "BL", "BL", ".", "SW"],
+  [".", ".", ".", "BL", "BL", "BL", "BL", ".", ".", "SW"],
 ];
 
-// ─────────────────────────────────────────────
-//  小狗 OVERFLOW 状态
-// ─────────────────────────────────────────────
-
-const DOG_FRAME_OVERFLOW_1: PixelFrame = [
-  [".", "F", ".", ".", ".", ".", "F", "."],
-  ["F", "F", ".", ".", ".", ".", "F", "F"],
-  ["F", "F", "F", "F", "F", "F", "F", "F"],
-  [".", "F", "F", "F", "F", "F", "F", "."],
-  [".", ".", "E", "F", "F", "E", ".", "."],
-  [".", ".", "E1", "F", "F", "E1", ".", "."],
-  [".", ".", "F", "N", "F", "F", ".", "."],
-  [".", ".", ".", "C_OVERFLOW", "C_OVERFLOW", ".", ".", "."],
-  [".", ".", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", ".", "."],
-  [".", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "."],
-  [".", "C_OVERFLOW", "C_OVERFLOW", "T", "T", "C_OVERFLOW", "C_OVERFLOW", "."],
-  [".", ".", "C_OVERFLOW", "C_OVERFLOW", "T", "C_OVERFLOW", ".", "."],
-  [".", ".", "P", ".", ".", "P", ".", "."], // 水滴
-  [".", ".", ".", "P", "P", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
+// DOG DYING STATE
+const DOG_DYING_1: PixelFrame = [
+  [".", "BL", "FC", "FC", ".", ".", "FC", "FC", "BL", "."],
+  [".", ".", "BL", "BL", "BL", "BL", "BL", "BL", ".", "."],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FC", "BL", "FC", "BL", "BL", "FC", "BL", "FC", "BL"],  // X eyes
+  ["BL", "FL", "FL", "FL", "FL", "FL", "FL", "FL", "FL", "BL"],  // flat mouth
+  ["BL", "BL", "FL", "FL", "FL", "FL", "FL", "FL", "BL", "BL"],
+  [".", "BL", "BL", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "BL", "BL", "."],
+  [".", "BL", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "BL", "."],
+  [".", "BL", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "BL", "."],
+  [".", ".", "BL", "BL", "C_DYING", "C_DYING", "BL", "BL", ".", "."],
+  [".", ".", "ST", "BL", "BL", "BL", "BL", ".", ".", "."],  // smoke
 ];
 
-const DOG_FRAME_OVERFLOW_2: PixelFrame = [
-  [".", "F", ".", ".", ".", ".", "F", "."],
-  ["F", "F", ".", ".", ".", ".", "F", "F"],
-  ["F", "F", "F", "F", "F", "F", "F", "F"],
-  [".", "F", "F", "F", "F", "F", "F", "."],
-  [".", ".", "E", "F", "F", "E", ".", "."],
-  [".", ".", "E1", "F", "F", "E1", ".", "."],
-  [".", ".", "F", "N", "F", "F", ".", "."],
-  [".", ".", ".", "C_OVERFLOW", "C_OVERFLOW", ".", ".", "."],
-  [".", ".", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", ".", "."],
-  [".", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "."],
-  [".", "C_OVERFLOW", "C_OVERFLOW", "C_OVERFLOW", "T", "C_OVERFLOW", "C_OVERFLOW", "."],
-  [".", ".", "C_OVERFLOW", "C_OVERFLOW", "T", "C_OVERFLOW", ".", "."],
-  [".", ".", ".", "P", "P", ".", ".", "."],
-  [".", ".", "P", ".", ".", "P", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
-  [".", ".", ".", ".", ".", ".", ".", "."],
+const DOG_DYING_2: PixelFrame = [
+  [".", "BL", "FC", "FC", ".", ".", "FC", "FC", "BL", "."],
+  [".", ".", "BL", "BL", "BL", "BL", "BL", "BL", ".", "."],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "FC", "BL"],
+  ["BL", "FC", "BL", "FC", "BL", "BL", "FC", "BL", "FC", "BL"],
+  ["BL", "FL", "FL", "FL", "FL", "FL", "FL", "FL", "FL", "BL"],
+  ["BL", "BL", "FL", "FL", "FL", "FL", "FL", "FL", "BL", "BL"],
+  [".", "BL", "BL", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "BL", "BL", "."],
+  [".", "BL", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "BL", "."],
+  [".", "BL", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "C_DYING", "BL", "."],
+  [".", ".", "BL", "BL", "C_DYING", "C_DYING", "BL", "BL", "ST", "."],
+  [".", ".", ".", "BL", "BL", "BL", "BL", ".", "ST", "."],
 ];
 
-// ─────────────────────────────────────────────
-//  导出动画配置
-// ─────────────────────────────────────────────
-
+// Export
 export const DOG_ANIMATIONS: Record<PetState, AnimationConfig> = {
-  dying: {
-    frames: [DOG_FRAME_DYING_1, DOG_FRAME_DYING_2],
-    interval: 800,
-    loop: true,
-  },
-  dehydrated: {
-    frames: [DOG_FRAME_DEHYDRATED_1, DOG_FRAME_DEHYDRATED_2],
-    interval: 600,
-    loop: true,
-  },
-  normal: {
-    frames: [DOG_FRAME_NORMAL_1, DOG_FRAME_NORMAL_2],
-    interval: 1000,
-    loop: true,
-  },
-  good: {
-    frames: [DOG_FRAME_GOOD_1, DOG_FRAME_GOOD_2],
-    interval: 800,
-    loop: true,
-  },
-  happy: {
-    frames: [DOG_FRAME_HAPPY_1, DOG_FRAME_HAPPY_2],
-    interval: 400,
-    loop: true,
-  },
-  overflow: {
-    frames: [DOG_FRAME_OVERFLOW_1, DOG_FRAME_OVERFLOW_2],
-    interval: 400,
-    loop: true,
-  },
+  dying: { frames: [DOG_DYING_1, DOG_DYING_2], interval: 800, loop: true },
+  dehydrated: { frames: [DOG_DEHYDRATED_1, DOG_DEHYDRATED_2], interval: 600, loop: true },
+  normal: { frames: [DOG_NORMAL_1, DOG_NORMAL_2], interval: 1000, loop: true },
+  good: { frames: [DOG_GOOD_1, DOG_GOOD_2], interval: 800, loop: true },
+  happy: { frames: [DOG_HAPPY_1, DOG_HAPPY_2], interval: 400, loop: true },
+  overflow: { frames: [DOG_OVERFLOW_1, DOG_OVERFLOW_2], interval: 400, loop: true },
 };

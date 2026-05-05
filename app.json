@@ -2,7 +2,7 @@
   "expo": {
     "name": "Water Tracker",
     "slug": "WaterTracker",
-    "version": "2.9.0",
+    "version": "3.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -21,7 +21,7 @@
         "backgroundColor": "#1a1a2e"
       },
       "package": "com.watertracker.app",
-      "versionCode": 14
+      "versionCode": 15
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -34,13 +34,22 @@
           "color": "#4FC3F7",
           "sounds": []
         }
-      ]
+      ],
+      "expo-updates"
     ],
     "extra": {
       "eas": {
         "projectId": "f234c07f-17d1-42b8-936a-66e3c0021456"
       }
     },
-    "owner": "0verwhe1med"
+    "owner": "0verwhe1med",
+    "updates": {
+      "enabled": true,
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/f234c07f-17d1-42b8-936a-66e3c0021456"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
   }
 }

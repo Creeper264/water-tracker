@@ -230,6 +230,25 @@ const en: Dict = {
   "achieve.level40": "God Messenger",
   "achieve.level45": "Water God",
   "achieve.level50": "Water Supreme",
+
+  // v3.0.0: Updates
+  "updates.title": "Check for Updates",
+  "updates.checking": "Checking for updates...",
+  "updates.found": "Update Available",
+  "updates.foundMessage": "A new version is available. Update now?",
+  "updates.update": "Update",
+  "updates.later": "Later",
+  "updates.downloaded": "Download Complete",
+  "updates.downloadedMessage": "Update downloaded. Restart app now?",
+  "updates.restart": "Restart",
+  "updates.failed": "Update Failed",
+  "updates.failedMessage": "Failed to download update. Please try again.",
+  "updates.latest": "Up to Date",
+  "updates.latestMessage": "You're running the latest version.",
+  "updates.error": "Update Error",
+  "updates.errorMessage": "Could not check for updates. Please check your connection.",
+  "updates.devMode": "Development Mode",
+  "updates.devModeHint": "OTA updates are not available in development mode.",
 };
 
 const zh: Dict = {
@@ -401,6 +420,25 @@ const zh: Dict = {
   "achieve.level40": "水神使者",
   "achieve.level45": "水神",
   "achieve.level50": "水之至尊",
+
+  // v3.0.0: 更新
+  "updates.title": "检查更新",
+  "updates.checking": "正在检查更新...",
+  "updates.found": "发现新版本",
+  "updates.foundMessage": "有新版本可用，是否立即更新？",
+  "updates.update": "更新",
+  "updates.later": "稍后",
+  "updates.downloaded": "下载完成",
+  "updates.downloadedMessage": "更新已下载完成，是否立即重启应用？",
+  "updates.restart": "重启",
+  "updates.failed": "更新失败",
+  "updates.failedMessage": "下载更新失败，请稍后重试。",
+  "updates.latest": "已是最新",
+  "updates.latestMessage": "当前已是最新版本。",
+  "updates.error": "更新出错",
+  "updates.errorMessage": "无法检查更新，请检查网络连接。",
+  "updates.devMode": "开发模式",
+  "updates.devModeHint": "开发模式下不支持 OTA 更新。",
 };
 
 const TABLES: Record<Locale, Dict> = { en, zh };

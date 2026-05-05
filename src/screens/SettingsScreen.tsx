@@ -25,6 +25,7 @@ import {
   recommendDailyGoalMl,
 } from "../utils/goalCalculator";
 import { exportDataViaShare } from "../utils/dataExport";
+import { checkAndPromptUpdate } from "../utils/updates";
 import AchievementsScreen from "./AchievementsScreen";
 
 interface SettingsScreenProps {
@@ -721,11 +722,22 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
         </TouchableOpacity>
       </View>
 
+      {/* ── Check for Updates ── */}
+      <View style={[styles.section, dynamicStyles.section]}>
+        <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>{t("updates.title")}</Text>
+        <TouchableOpacity
+          style={styles.saveButton}
+          onPress={() => checkAndPromptUpdate(true)}
+        >
+          <Text style={styles.saveButtonText}>{t("updates.title")}</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* ── About ── */}
       <View style={[styles.section, dynamicStyles.section]}>
         <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>{t("settings.about")}</Text>
         <Text style={[styles.aboutText, dynamicStyles.aboutText]}>
-          Water Tracker v2.9.0{"\n"}
+          Water Tracker v3.0.0{"\n"}
           {t("app.about")}
         </Text>
       </View>
