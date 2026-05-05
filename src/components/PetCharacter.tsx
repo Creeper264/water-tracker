@@ -243,14 +243,13 @@ const PetCharacter: React.FC<PetCharacterProps> = ({
   }, [size]);
 
   const handlePress = () => {
+    // 点击宠物只显示爱心互动，不触发改名
     setIsPressed(true);
     setShowHeart(true);
     setTimeout(() => {
       setShowHeart(false);
       setIsPressed(false);
     }, 800);
-
-    onPress?.();
   };
 
   const scaleX = facingDirection;

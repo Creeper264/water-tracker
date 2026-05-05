@@ -218,7 +218,6 @@ const PetScreen: React.FC<PetScreenProps> = ({ streakData, todayLog, settings })
             state={petState}
             size={120}
             unlockedItems={streakData?.unlockedItems || []}
-            onPress={handleRename}
             showSpeech={true}
             petType={petData.petType}
           />

@@ -725,7 +725,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
       <View style={[styles.section, dynamicStyles.section]}>
         <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>{t("settings.about")}</Text>
         <Text style={[styles.aboutText, dynamicStyles.aboutText]}>
-          Water Tracker v2.8.0{"\n"}
+          Water Tracker v2.9.0{"\n"}
           {t("app.about")}
         </Text>
       </View>
