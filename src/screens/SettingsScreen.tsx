@@ -663,7 +663,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t("settings.about")}</Text>
         <Text style={styles.aboutText}>
-          Water Tracker v2.4.0{"\n"}
+          Water Tracker v2.5.0{"\n"}
           {t("app.about")}
         </Text>
       </View>

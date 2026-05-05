@@ -10,7 +10,7 @@ import {
 import { useFocusEffect } from "@react-navigation/native";
 import { LineChart, BarChart } from "react-native-chart-kit";
 import { UserSettings } from "../types";
-import { getWeeklyData, getDateRange } from "../utils/storage";
+import { getWeeklyData, getDateRange, getToday } from "../utils/storage";
 import { t, useLocale } from "../utils/i18n";
 
 const screenWidth = Dimensions.get("window").width;
@@ -25,17 +25,21 @@ const DAY_KEYS = [
   "day.sat",
 ] as const;
 
+type ViewMode = "today" | "week" | "month";
+
 interface StatsScreenProps {
   settings: UserSettings | null;
 }
 
 const StatsScreen: React.FC<StatsScreenProps> = ({ settings }) => {
   useLocale();
-  const [viewMode, setViewMode] = useState<"week" | "month">("week");
+  const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [chartData, setChartData] = useState<number[]>([]);
   const [labels, setLabels] = useState<string[]>([]);
   const [average, setAverage] = useState(0);
   const [total, setTotal] = useState(0);
+  const [entryCount, setEntryCount] = useState(0);
+  const [peakHour, setPeakHour] = useState<string>(t("stats.none"));
   const [loading, setLoading] = useState(true);
 
   const goal = settings?.dailyGoal || 2000;
@@ -47,9 +51,37 @@ const StatsScreen: React.FC<StatsScreenProps> = ({ settings }) => {
 
       const loadStats = async () => {
         setLoading(true);
+        const allLogs = await getWeeklyData();
+
+        if (viewMode === "today") {
+          const todayLog = allLogs[getToday()];
+          const hourly = Array.from({ length: 24 }, () => 0);
+          const entries = todayLog?.entries ?? [];
+
+          entries.forEach((entry) => {
+            const hour = new Date(entry.timestamp).getHours();
+            hourly[hour] += entry.effectiveAmount ?? entry.amount;
+          });
+
+          const peakIndex = hourly.reduce(
+            (best, value, index) => (value > hourly[best] ? index : best),
+            0,
+          );
+          const todayTotal = hourly.reduce((sum, value) => sum + value, 0);
+
+          if (!isActive) return;
+          setChartData(hourly);
+          setLabels(hourly.map((_, hour) => (hour % 4 === 0 ? String(hour) : "")));
+          setTotal(todayTotal);
+          setAverage(0);
+          setEntryCount(entries.length);
+          setPeakHour(todayTotal > 0 ? `${String(peakIndex).padStart(2, "0")}:00` : t("stats.none"));
+          setLoading(false);
+          return;
+        }
+
         const days = viewMode === "week" ? 7 : 30;
         const dates = getDateRange(days);
-        const allLogs = await getWeeklyData();
 
         const data: number[] = [];
         const chartLabels: string[] = [];
@@ -75,6 +107,8 @@ const StatsScreen: React.FC<StatsScreenProps> = ({ settings }) => {
 
         setChartData(data);
         setLabels(chartLabels);
+        setEntryCount(0);
+        setPeakHour(t("stats.none"));
 
         const validData = data.filter((d) => d > 0);
         if (validData.length > 0) {
@@ -126,6 +160,22 @@ const StatsScreen: React.FC<StatsScreenProps> = ({ settings }) => {
         <TouchableOpacity
           style={[
             styles.toggleButton,
+            viewMode === "today" && styles.toggleActive,
+          ]}
+          onPress={() => setViewMode("today")}
+        >
+          <Text
+            style={[
+              styles.toggleText,
+              viewMode === "today" && styles.toggleTextActive,
+            ]}
+          >
+            {t("stats.today")}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.toggleButton,
             viewMode === "week" && styles.toggleActive,
           ]}
           onPress={() => setViewMode("week")}
@@ -158,23 +208,46 @@ const StatsScreen: React.FC<StatsScreenProps> = ({ settings }) => {
       </View>
 
       <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{average}</Text>
-          <Text style={styles.statLabel}>{t("stats.avg")}</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{total}</Text>
-          <Text style={styles.statLabel}>{t("stats.total")}</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{goalsMet}</Text>
-          <Text style={styles.statLabel}>{t("stats.goalsMet")}</Text>
-        </View>
+        {viewMode === "today" ? (
+          <>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>{total}</Text>
+              <Text style={styles.statLabel}>{t("stats.totalToday")}</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>{entryCount}</Text>
+              <Text style={styles.statLabel}>{t("stats.entries")}</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statValueSmall}>{peakHour}</Text>
+              <Text style={styles.statLabel}>{t("stats.peakHour")}</Text>
+            </View>
+          </>
+        ) : (
+          <>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>{average}</Text>
+              <Text style={styles.statLabel}>{t("stats.avg")}</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>{total}</Text>
+              <Text style={styles.statLabel}>{t("stats.total")}</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>{goalsMet}</Text>
+              <Text style={styles.statLabel}>{t("stats.goalsMet")}</Text>
+            </View>
+          </>
+        )}
       </View>
 
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>
-          {viewMode === "week" ? t("stats.weekly") : t("stats.monthly")}
+          {viewMode === "today"
+            ? t("stats.todayTitle")
+            : viewMode === "week"
+              ? t("stats.weekly")
+              : t("stats.monthly")}
         </Text>
         {loading ? (
           <View style={styles.emptyChart}>
@@ -187,7 +260,7 @@ const StatsScreen: React.FC<StatsScreenProps> = ({ settings }) => {
               {t("stats.emptyHint")}
             </Text>
           </View>
-        ) : viewMode === "week" ? (
+        ) : viewMode === "week" || viewMode === "today" ? (
           <BarChart
             data={{
               labels,
@@ -278,6 +351,11 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 24,
+    fontWeight: "bold",
+    color: "#4FC3F7",
+  },
+  statValueSmall: {
+    fontSize: 18,
     fontWeight: "bold",
     color: "#4FC3F7",
   },
