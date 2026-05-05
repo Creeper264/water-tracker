@@ -13,8 +13,9 @@ import {
   Dimensions,
 } from "react-native";
 import * as Notifications from "expo-notifications";
-import { StreakData, PetData, DailyLog, UserSettings, PetState } from "../types";
+import { StreakData, PetData, DailyLog, UserSettings, PetState, ThemeColors } from "../types";
 import { getStreakData } from "../utils/storage";
+import { useTheme } from "../contexts/ThemeContext";
 import {
   getPetData,
   getLevelProgress,
@@ -43,6 +44,8 @@ const SEDENTARY_SPECIAL_LINES = [
 ];
 
 const PetScreen: React.FC<PetScreenProps> = ({ streakData, todayLog, settings }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [petData, setPetData] = useState<PetData | null>(null);
   const [editingName, setEditingName] = useState(false);
   const [specialLine, setSpecialLine] = useState<string | null>(null);
@@ -144,7 +147,7 @@ const PetScreen: React.FC<PetScreenProps> = ({ streakData, todayLog, settings })
               value={newName}
               onChangeText={setNewName}
               placeholder="输入新名字"
-              placeholderTextColor="#8b8b8b"
+              placeholderTextColor={colors.textSecondary}
               autoFocus
               maxLength={12}
             />
@@ -304,275 +307,276 @@ const getExpRequired = (level: number): number => {
   return Math.floor(100 * Math.pow(1.5, level - 1));
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#1a1a2e",
-  },
-  loadingText: {
-    color: "#4FC3F7",
-    fontSize: 18,
-    textAlign: "center",
-    marginTop: 50,
-  },
-  sceneContainer: {
-    position: "relative",
-    height: SCREEN_HEIGHT * 0.45,
-  },
-  petOverlay: {
-    position: "absolute",
-    bottom: 40,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-  },
-  infoContainer: {
-    flex: 1,
-  },
-  infoContent: {
-    paddingBottom: 20,
-  },
-  specialLineContainer: {
-    position: "absolute",
-    top: 16,
-    left: 16,
-    right: 16,
-    zIndex: 100,
-  },
-  specialLineCard: {
-    backgroundColor: "#FF8C00",
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  specialLineEmoji: {
-    fontSize: 24,
-    marginRight: 12,
-  },
-  specialLineText: {
-    flex: 1,
-    fontSize: 15,
-    color: "#ffffff",
-    fontWeight: "500",
-    lineHeight: 20,
-  },
-  closeButton: {
-    marginLeft: 12,
-    padding: 4,
-  },
-  closeButtonText: {
-    fontSize: 18,
-    color: "#ffffff",
-    opacity: 0.8,
-  },
-  petCard: {
-    backgroundColor: "#2d2d44",
-    borderRadius: 16,
-    padding: 20,
-    margin: 16,
-    alignItems: "center",
-  },
-  petName: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#4FC3F7",
-  },
-  renameHint: {
-    fontSize: 12,
-    color: "#8b8b8b",
-    marginTop: 4,
-  },
-  levelTitle: {
-    fontSize: 18,
-    color: "#ffd700",
-    marginTop: 8,
-  },
-  section: {
-    backgroundColor: "#2d2d44",
-    borderRadius: 12,
-    padding: 16,
-    marginHorizontal: 16,
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#ffffff",
-    marginBottom: 12,
-  },
-  levelRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  levelText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#ffd700",
-  },
-  expText: {
-    fontSize: 14,
-    color: "#8b8b8b",
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: "#1a1a2e",
-    borderRadius: 4,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    backgroundColor: "#4FC3F7",
-    borderRadius: 4,
-  },
-  progressText: {
-    fontSize: 12,
-    color: "#8b8b8b",
-    textAlign: "right",
-    marginTop: 4,
-  },
-  statsGrid: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-  },
-  statItem: {
-    alignItems: "center",
-    flex: 1,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#4FC3F7",
-  },
-  statLabel: {
-    fontSize: 12,
-    color: "#8b8b8b",
-    marginTop: 4,
-    textAlign: "center",
-  },
-  unlockCard: {
-    flexDirection: "row",
-    backgroundColor: "#1a1a2e",
-    borderRadius: 12,
-    padding: 12,
-    alignItems: "center",
-  },
-  unlockEmoji: {
-    fontSize: 36,
-    marginRight: 12,
-  },
-  unlockInfo: {
-    flex: 1,
-  },
-  unlockName: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#ffffff",
-  },
-  unlockDesc: {
-    fontSize: 12,
-    color: "#8b8b8b",
-    marginTop: 2,
-  },
-  unlockProgress: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 8,
-  },
-  unlockProgressBar: {
-    flex: 1,
-    height: 6,
-    backgroundColor: "#2d2d44",
-    borderRadius: 3,
-    marginRight: 8,
-    overflow: "hidden",
-  },
-  unlockProgressFill: {
-    height: "100%",
-    backgroundColor: "#ffd700",
-    borderRadius: 3,
-  },
-  unlockProgressText: {
-    fontSize: 12,
-    color: "#ffd700",
-  },
-  decorationsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  decorationItem: {
-    backgroundColor: "#1a1a2e",
-    borderRadius: 8,
-    padding: 8,
-    alignItems: "center",
-    width: "30%",
-  },
-  decorationEmoji: {
-    fontSize: 24,
-  },
-  decorationName: {
-    fontSize: 10,
-    color: "#8b8b8b",
-    marginTop: 4,
-    textAlign: "center",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContent: {
-    backgroundColor: "#2d2d44",
-    borderRadius: 16,
-    padding: 24,
-    width: "80%",
-    maxWidth: 300,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#ffffff",
-    textAlign: "center",
-    marginBottom: 16,
-  },
-  modalInput: {
-    backgroundColor: "#1a1a2e",
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: "#ffffff",
-    marginBottom: 20,
-  },
-  modalButtons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  modalButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  modalButtonCancel: {
-    backgroundColor: "#1a1a2e",
-  },
-  modalButtonConfirm: {
-    backgroundColor: "#4FC3F7",
-  },
-  modalButtonTextCancel: {
-    color: "#8b8b8b",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  modalButtonTextConfirm: {
-    color: "#1a1a2e",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-});
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    loadingText: {
+      color: colors.accent,
+      fontSize: 18,
+      textAlign: "center",
+      marginTop: 50,
+    },
+    sceneContainer: {
+      position: "relative",
+      height: SCREEN_HEIGHT * 0.45,
+    },
+    petOverlay: {
+      position: "absolute",
+      bottom: 40,
+      left: 0,
+      right: 0,
+      alignItems: "center",
+    },
+    infoContainer: {
+      flex: 1,
+    },
+    infoContent: {
+      paddingBottom: 20,
+    },
+    specialLineContainer: {
+      position: "absolute",
+      top: 16,
+      left: 16,
+      right: 16,
+      zIndex: 100,
+    },
+    specialLineCard: {
+      backgroundColor: "#FF8C00",
+      borderRadius: 12,
+      padding: 16,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    specialLineEmoji: {
+      fontSize: 24,
+      marginRight: 12,
+    },
+    specialLineText: {
+      flex: 1,
+      fontSize: 15,
+      color: "#ffffff",
+      fontWeight: "500",
+      lineHeight: 20,
+    },
+    closeButton: {
+      marginLeft: 12,
+      padding: 4,
+    },
+    closeButtonText: {
+      fontSize: 18,
+      color: "#ffffff",
+      opacity: 0.8,
+    },
+    petCard: {
+      backgroundColor: colors.card,
+      borderRadius: 16,
+      padding: 20,
+      margin: 16,
+      alignItems: "center",
+    },
+    petName: {
+      fontSize: 28,
+      fontWeight: "bold",
+      color: colors.accent,
+    },
+    renameHint: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginTop: 4,
+    },
+    levelTitle: {
+      fontSize: 18,
+      color: "#ffd700",
+      marginTop: 8,
+    },
+    section: {
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: 16,
+      marginHorizontal: 16,
+      marginBottom: 12,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: colors.text,
+      marginBottom: 12,
+    },
+    levelRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: 8,
+    },
+    levelText: {
+      fontSize: 20,
+      fontWeight: "bold",
+      color: "#ffd700",
+    },
+    expText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    progressBar: {
+      height: 8,
+      backgroundColor: colors.background,
+      borderRadius: 4,
+      overflow: "hidden",
+    },
+    progressFill: {
+      height: "100%",
+      backgroundColor: colors.accent,
+      borderRadius: 4,
+    },
+    progressText: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      textAlign: "right",
+      marginTop: 4,
+    },
+    statsGrid: {
+      flexDirection: "row",
+      justifyContent: "space-around",
+    },
+    statItem: {
+      alignItems: "center",
+      flex: 1,
+    },
+    statValue: {
+      fontSize: 24,
+      fontWeight: "bold",
+      color: colors.accent,
+    },
+    statLabel: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginTop: 4,
+      textAlign: "center",
+    },
+    unlockCard: {
+      flexDirection: "row",
+      backgroundColor: colors.background,
+      borderRadius: 12,
+      padding: 12,
+      alignItems: "center",
+    },
+    unlockEmoji: {
+      fontSize: 36,
+      marginRight: 12,
+    },
+    unlockInfo: {
+      flex: 1,
+    },
+    unlockName: {
+      fontSize: 16,
+      fontWeight: "bold",
+      color: colors.text,
+    },
+    unlockDesc: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+    unlockProgress: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: 8,
+    },
+    unlockProgressBar: {
+      flex: 1,
+      height: 6,
+      backgroundColor: colors.card,
+      borderRadius: 3,
+      marginRight: 8,
+      overflow: "hidden",
+    },
+    unlockProgressFill: {
+      height: "100%",
+      backgroundColor: "#ffd700",
+      borderRadius: 3,
+    },
+    unlockProgressText: {
+      fontSize: 12,
+      color: "#ffd700",
+    },
+    decorationsGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+    },
+    decorationItem: {
+      backgroundColor: colors.background,
+      borderRadius: 8,
+      padding: 8,
+      alignItems: "center",
+      width: "30%",
+    },
+    decorationEmoji: {
+      fontSize: 24,
+    },
+    decorationName: {
+      fontSize: 10,
+      color: colors.textSecondary,
+      marginTop: 4,
+      textAlign: "center",
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.7)",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    modalContent: {
+      backgroundColor: colors.card,
+      borderRadius: 16,
+      padding: 24,
+      width: "80%",
+      maxWidth: 300,
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: colors.text,
+      textAlign: "center",
+      marginBottom: 16,
+    },
+    modalInput: {
+      backgroundColor: colors.background,
+      borderRadius: 8,
+      padding: 12,
+      fontSize: 16,
+      color: colors.text,
+      marginBottom: 20,
+    },
+    modalButtons: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      gap: 12,
+    },
+    modalButton: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 8,
+      alignItems: "center",
+    },
+    modalButtonCancel: {
+      backgroundColor: colors.background,
+    },
+    modalButtonConfirm: {
+      backgroundColor: colors.accent,
+    },
+    modalButtonTextCancel: {
+      color: colors.textSecondary,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    modalButtonTextConfirm: {
+      color: colors.background,
+      fontSize: 16,
+      fontWeight: "bold",
+    },
+  });
 
 export default PetScreen;

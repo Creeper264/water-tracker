@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -9,9 +9,10 @@ import {
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { LineChart, BarChart } from "react-native-chart-kit";
-import { UserSettings } from "../types";
+import { UserSettings, ThemeColors } from "../types";
 import { getWeeklyData, getDateRange, getToday } from "../utils/storage";
 import { t, useLocale } from "../utils/i18n";
+import { useTheme } from "../contexts/ThemeContext";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -33,6 +34,7 @@ interface StatsScreenProps {
 
 const StatsScreen: React.FC<StatsScreenProps> = ({ settings }) => {
   useLocale();
+  const { colors } = useTheme();
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [chartData, setChartData] = useState<number[]>([]);
   const [labels, setLabels] = useState<string[]>([]);
@@ -135,22 +137,27 @@ const StatsScreen: React.FC<StatsScreenProps> = ({ settings }) => {
 
   const hasData = chartData.some((d) => d > 0);
 
-  const chartConfig = {
-    backgroundColor: "#1a1a2e",
-    backgroundGradientFrom: "#1a1a2e",
-    backgroundGradientTo: "#1a1a2e",
-    decimalPlaces: 0,
-    color: (opacity = 1) => `rgba(79, 195, 247, ${opacity})`,
-    labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-    style: {
-      borderRadius: 16,
-    },
-    propsForDots: {
-      r: "6",
-      strokeWidth: "2",
-      stroke: "#4FC3F7",
-    },
-  };
+  const chartConfig = useMemo(
+    () => ({
+      backgroundColor: colors.card,
+      backgroundGradientFrom: colors.card,
+      backgroundGradientTo: colors.card,
+      decimalPlaces: 0,
+      color: (opacity = 1) => colors.accent.replace(")", `, ${opacity})`).replace("rgb", "rgba"),
+      labelColor: (opacity = 1) => colors.text.replace(")", `, ${opacity})`).replace("rgb", "rgba"),
+      style: {
+        borderRadius: 16,
+      },
+      propsForDots: {
+        r: "6",
+        strokeWidth: "2",
+        stroke: colors.accent,
+      },
+    }),
+    [colors],
+  );
+
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -298,120 +305,121 @@ const StatsScreen: React.FC<StatsScreenProps> = ({ settings }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#1a1a2e",
-  },
-  content: {
-    padding: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#4FC3F7",
-    marginBottom: 20,
-  },
-  toggleContainer: {
-    flexDirection: "row",
-    backgroundColor: "#2d2d44",
-    borderRadius: 10,
-    padding: 4,
-    marginBottom: 20,
-  },
-  toggleButton: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: "center",
-    borderRadius: 8,
-  },
-  toggleActive: {
-    backgroundColor: "#4FC3F7",
-  },
-  toggleText: {
-    color: "#8b8b8b",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  toggleTextActive: {
-    color: "#1a1a2e",
-  },
-  statsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: "#2d2d44",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginHorizontal: 5,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#4FC3F7",
-  },
-  statValueSmall: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#4FC3F7",
-  },
-  statLabel: {
-    fontSize: 12,
-    color: "#8b8b8b",
-    marginTop: 5,
-  },
-  chartContainer: {
-    marginTop: 10,
-  },
-  chartTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#ffffff",
-    marginBottom: 10,
-  },
-  chart: {
-    borderRadius: 16,
-  },
-  emptyChart: {
-    height: 160,
-    backgroundColor: "#2d2d44",
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  emptyChartText: {
-    color: "#8b8b8b",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  emptyChartSubText: {
-    color: "#666",
-    fontSize: 13,
-    marginTop: 6,
-  },
-  goalLine: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 20,
-    padding: 15,
-    backgroundColor: "#2d2d44",
-    borderRadius: 10,
-  },
-  goalIndicator: {
-    width: 12,
-    height: 12,
-    backgroundColor: "#4FC3F7",
-    borderRadius: 6,
-    marginRight: 10,
-  },
-  goalText: {
-    color: "#ffffff",
-    fontSize: 16,
-  },
-});
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      padding: 20,
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: "bold",
+      color: colors.accent,
+      marginBottom: 20,
+    },
+    toggleContainer: {
+      flexDirection: "row",
+      backgroundColor: colors.card,
+      borderRadius: 10,
+      padding: 4,
+      marginBottom: 20,
+    },
+    toggleButton: {
+      flex: 1,
+      paddingVertical: 10,
+      alignItems: "center",
+      borderRadius: 8,
+    },
+    toggleActive: {
+      backgroundColor: colors.accent,
+    },
+    toggleText: {
+      color: colors.textSecondary,
+      fontWeight: "bold",
+      fontSize: 16,
+    },
+    toggleTextActive: {
+      color: colors.background,
+    },
+    statsRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: 20,
+    },
+    statCard: {
+      flex: 1,
+      backgroundColor: colors.card,
+      padding: 15,
+      borderRadius: 10,
+      alignItems: "center",
+      marginHorizontal: 5,
+    },
+    statValue: {
+      fontSize: 24,
+      fontWeight: "bold",
+      color: colors.accent,
+    },
+    statValueSmall: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: colors.accent,
+    },
+    statLabel: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginTop: 5,
+    },
+    chartContainer: {
+      marginTop: 10,
+    },
+    chartTitle: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: colors.text,
+      marginBottom: 10,
+    },
+    chart: {
+      borderRadius: 16,
+    },
+    emptyChart: {
+      height: 160,
+      backgroundColor: colors.card,
+      borderRadius: 16,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    emptyChartText: {
+      color: colors.textSecondary,
+      fontSize: 16,
+      fontWeight: "bold",
+    },
+    emptyChartSubText: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      marginTop: 6,
+    },
+    goalLine: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: 20,
+      padding: 15,
+      backgroundColor: colors.card,
+      borderRadius: 10,
+    },
+    goalIndicator: {
+      width: 12,
+      height: 12,
+      backgroundColor: colors.accent,
+      borderRadius: 6,
+      marginRight: 10,
+    },
+    goalText: {
+      color: colors.text,
+      fontSize: 16,
+    },
+  });
 
 export default StatsScreen;

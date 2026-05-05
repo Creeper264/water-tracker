@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -9,8 +9,9 @@ import {
 } from "react-native";
 import { getStreakData } from "../utils/storage";
 import { getPetData, getLevelTitle } from "../utils/petStorage";
-import { StreakData, PetData } from "../types";
+import { StreakData, PetData, ThemeColors } from "../types";
 import { t, useLocale } from "../utils/i18n";
+import { useTheme } from "../contexts/ThemeContext";
 
 // Achievement definitions
 const STREAK_ACHIEVEMENTS = [
@@ -49,9 +50,29 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({
   navigation,
 }) => {
   useLocale();
+  const { colors } = useTheme();
   const [streak, setStreak] = useState<StreakData | null>(null);
   const [pet, setPet] = useState<PetData | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const dynamicStyles = useMemo(() => ({
+    container: { backgroundColor: colors.background },
+    loading: { color: colors.textSecondary },
+    title: { color: colors.accent },
+    statCard: { backgroundColor: colors.card },
+    statValue: { color: colors.accent },
+    statValueSmall: { color: colors.accent },
+    statLabel: { color: colors.textSecondary },
+    sectionTitle: { color: colors.text },
+    badge: { backgroundColor: colors.card },
+    badgeLocked: { backgroundColor: colors.background, borderColor: colors.border },
+    badgeName: { color: colors.text },
+    badgeNameLocked: { color: colors.textSecondary },
+    badgeProgress: { color: colors.accent },
+    tipsCard: { backgroundColor: colors.card },
+    tipsTitle: { color: colors.accent },
+    tipsText: { color: colors.textSecondary },
+  }), [colors]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -71,14 +92,14 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({
   ) => (
     <View
       key={item.nameKey}
-      style={[styles.badge, !unlocked && styles.badgeLocked]}
+      style={[styles.badge, !unlocked && styles.badgeLocked, !unlocked && dynamicStyles.badgeLocked, dynamicStyles.badge]}
     >
       <Text style={styles.badgeIcon}>{item.icon}</Text>
-      <Text style={[styles.badgeName, !unlocked && styles.badgeNameLocked]}>
+      <Text style={[styles.badgeName, !unlocked && styles.badgeNameLocked, !unlocked && dynamicStyles.badgeNameLocked, dynamicStyles.badgeName]}>
         {t(item.nameKey)}
       </Text>
       {!unlocked && progress && (
-        <Text style={styles.badgeProgress}>{progress}</Text>
+        <Text style={[styles.badgeProgress, dynamicStyles.badgeProgress]}>{progress}</Text>
       )}
       {unlocked && <Text style={styles.badgeCheck}>✓</Text>}
     </View>
@@ -86,8 +107,8 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.loading}>{t("stats.loading")}</Text>
+      <View style={[styles.container, dynamicStyles.container]}>
+        <Text style={[styles.loading, dynamicStyles.loading]}>{t("stats.loading")}</Text>
       </View>
     );
   }
@@ -97,29 +118,29 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({
   const unlockedItems = streak?.unlockedItems || [];
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>{t("achieve.title")}</Text>
+    <ScrollView style={[styles.container, dynamicStyles.container]} contentContainerStyle={styles.content}>
+      <Text style={[styles.title, dynamicStyles.title]}>{t("achieve.title")}</Text>
 
       {/* Current stats summary */}
       <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{currentStreak}</Text>
-          <Text style={styles.statLabel}>{t("achieve.currentStreak")}</Text>
+        <View style={[styles.statCard, dynamicStyles.statCard]}>
+          <Text style={[styles.statValue, dynamicStyles.statValue]}>{currentStreak}</Text>
+          <Text style={[styles.statLabel, dynamicStyles.statLabel]}>{t("achieve.currentStreak")}</Text>
         </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{currentLevel}</Text>
-          <Text style={styles.statLabel}>{t("achieve.currentLevel")}</Text>
+        <View style={[styles.statCard, dynamicStyles.statCard]}>
+          <Text style={[styles.statValue, dynamicStyles.statValue]}>{currentLevel}</Text>
+          <Text style={[styles.statLabel, dynamicStyles.statLabel]}>{t("achieve.currentLevel")}</Text>
         </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statValueSmall}>
+        <View style={[styles.statCard, dynamicStyles.statCard]}>
+          <Text style={[styles.statValueSmall, dynamicStyles.statValueSmall]}>
             {getLevelTitle(currentLevel)}
           </Text>
-          <Text style={styles.statLabel}>{t("achieve.currentTitle")}</Text>
+          <Text style={[styles.statLabel, dynamicStyles.statLabel]}>{t("achieve.currentTitle")}</Text>
         </View>
       </View>
 
       {/* Streak achievements section */}
-      <Text style={styles.sectionTitle}>{t("achieve.streakBadges")}</Text>
+      <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>{t("achieve.streakBadges")}</Text>
       <View style={styles.badgesGrid}>
         {STREAK_ACHIEVEMENTS.map((ach) => {
           const unlocked = unlockedItems.includes(ach.id);
@@ -131,7 +152,7 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({
       </View>
 
       {/* Level achievements section */}
-      <Text style={styles.sectionTitle}>{t("achieve.levelBadges")}</Text>
+      <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>{t("achieve.levelBadges")}</Text>
       <View style={styles.badgesGrid}>
         {LEVEL_ACHIEVEMENTS.map((ach) => {
           const unlocked = currentLevel >= ach.level;
@@ -141,10 +162,10 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({
       </View>
 
       {/* Tips section */}
-      <View style={styles.tipsCard}>
-        <Text style={styles.tipsTitle}>{t("achieve.howToUnlock")}</Text>
-        <Text style={styles.tipsText}>{t("achieve.streakTip")}</Text>
-        <Text style={styles.tipsText}>{t("achieve.levelTip")}</Text>
+      <View style={[styles.tipsCard, dynamicStyles.tipsCard]}>
+        <Text style={[styles.tipsTitle, dynamicStyles.tipsTitle]}>{t("achieve.howToUnlock")}</Text>
+        <Text style={[styles.tipsText, dynamicStyles.tipsText]}>{t("achieve.streakTip")}</Text>
+        <Text style={[styles.tipsText, dynamicStyles.tipsText]}>{t("achieve.levelTip")}</Text>
       </View>
     </ScrollView>
   );

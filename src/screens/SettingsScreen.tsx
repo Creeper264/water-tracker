@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -37,8 +37,30 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
   onUpdateSettings,
 }) => {
   useLocale();
-  const { theme, setTheme } = useTheme();
+  const { theme, colors, setTheme } = useTheme();
   const [showAchievements, setShowAchievements] = useState(false);
+
+  // Dynamic styles based on theme colors
+  const dynamicStyles = useMemo(() => ({
+    container: { backgroundColor: colors.background },
+    title: { color: colors.accent },
+    section: { backgroundColor: colors.card },
+    sectionTitle: { color: colors.text },
+    input: { backgroundColor: colors.background, color: colors.text },
+    inputLabel: { color: colors.textSecondary },
+    inputTitle: { color: colors.textSecondary },
+    switchLabel: { color: colors.text },
+    timeSeparator: { color: colors.textSecondary },
+    hintText: { color: colors.textSecondary },
+    aboutText: { color: colors.textSecondary },
+    recommendPreview: { color: colors.accent },
+    backHeader: { backgroundColor: colors.background, borderBottomColor: colors.card },
+    backButtonText: { color: colors.accent },
+    themeButton: { backgroundColor: colors.background, borderColor: colors.border },
+    themeButtonActive: { backgroundColor: colors.accent, borderColor: colors.accent },
+    themeButtonText: { color: colors.textSecondary },
+    themeButtonTextActive: { color: colors.background },
+  }), [colors]);
 
   // ── Water goal ──
   const [dailyGoal, setDailyGoal] = useState(
@@ -337,13 +359,13 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
   // Show Achievements screen if toggled
   if (showAchievements) {
     return (
-      <View style={styles.container}>
-        <View style={styles.backHeader}>
+      <View style={[styles.container, dynamicStyles.container]}>
+        <View style={[styles.backHeader, dynamicStyles.backHeader]}>
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => setShowAchievements(false)}
           >
-            <Text style={styles.backButtonText}>← {t("settings.title")}</Text>
+            <Text style={[styles.backButtonText, dynamicStyles.backButtonText]}>← {t("settings.title")}</Text>
           </TouchableOpacity>
         </View>
         <AchievementsScreen navigation={null} />
@@ -353,21 +375,21 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>{t("settings.title")}</Text>
+      <Text style={[styles.title, dynamicStyles.title]}>{t("settings.title")}</Text>
 
       {/* ── Daily Goal ── */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t("settings.dailyGoal")}</Text>
+      <View style={[styles.section, dynamicStyles.section]}>
+        <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>{t("settings.dailyGoal")}</Text>
         <View style={styles.inputRow}>
           <TextInput
-            style={styles.input}
+            style={[styles.input, dynamicStyles.input]}
             value={dailyGoal}
             onChangeText={setDailyGoal}
             keyboardType="numeric"
             placeholder="2000"
-            placeholderTextColor="#8b8b8b"
+            placeholderTextColor={colors.textSecondary}
           />
-          <Text style={styles.inputLabel}>ml</Text>
+          <Text style={[styles.inputLabel, dynamicStyles.inputLabel]}>ml</Text>
         </View>
         <TouchableOpacity style={styles.saveButton} onPress={handleSaveGoal}>
           <Text style={styles.saveButtonText}>{t("settings.saveGoal")}</Text>
@@ -375,10 +397,10 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
       </View>
 
       {/* ── Water Reminders ── */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t("settings.waterReminders")}</Text>
+      <View style={[styles.section, dynamicStyles.section]}>
+        <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>{t("settings.waterReminders")}</Text>
         <View style={styles.switchRow}>
-          <Text style={styles.switchLabel}>{t("settings.enableWaterReminders")}</Text>
+          <Text style={[styles.switchLabel, dynamicStyles.switchLabel]}>{t("settings.enableWaterReminders")}</Text>
           <Switch
             value={notificationsEnabled}
             onValueChange={handleNotificationToggle}
@@ -389,40 +411,40 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
         {notificationsEnabled && (
           <>
-            <Text style={styles.inputTitle}>{t("settings.intervalMinutes")}</Text>
+            <Text style={[styles.inputTitle, dynamicStyles.inputTitle]}>{t("settings.intervalMinutes")}</Text>
             <View style={styles.inputRow}>
               <TextInput
-                style={styles.input}
+                style={[styles.input, dynamicStyles.input]}
                 value={interval}
                 onChangeText={setInterval}
                 keyboardType="numeric"
                 placeholder="60"
-                placeholderTextColor="#8b8b8b"
+                placeholderTextColor={colors.textSecondary}
               />
-              <Text style={styles.inputLabel}>min</Text>
+              <Text style={[styles.inputLabel, dynamicStyles.inputLabel]}>min</Text>
             </View>
 
-            <Text style={styles.inputTitle}>{t("settings.activeWindow")}</Text>
+            <Text style={[styles.inputTitle, dynamicStyles.inputTitle]}>{t("settings.activeWindow")}</Text>
             <View style={styles.timeRow}>
               <View style={styles.timeInput}>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, dynamicStyles.input]}
                   value={startHour}
                   onChangeText={setStartHour}
                   keyboardType="numeric"
                   placeholder="8"
-                  placeholderTextColor="#8b8b8b"
+                  placeholderTextColor={colors.textSecondary}
                 />
               </View>
-              <Text style={styles.timeSeparator}>{t("settings.toRange")}</Text>
+              <Text style={[styles.timeSeparator, dynamicStyles.timeSeparator]}>{t("settings.toRange")}</Text>
               <View style={styles.timeInput}>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, dynamicStyles.input]}
                   value={endHour}
                   onChangeText={setEndHour}
                   keyboardType="numeric"
                   placeholder="22"
-                  placeholderTextColor="#8b8b8b"
+                  placeholderTextColor={colors.textSecondary}
                 />
               </View>
             </View>
@@ -438,10 +460,10 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
       </View>
 
       {/* ── Sedentary Reminders ── */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t("settings.sedentaryReminders")}</Text>
+      <View style={[styles.section, dynamicStyles.section]}>
+        <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>{t("settings.sedentaryReminders")}</Text>
         <View style={styles.switchRow}>
-          <Text style={styles.switchLabel}>{t("settings.enableSedentaryReminders")}</Text>
+          <Text style={[styles.switchLabel, dynamicStyles.switchLabel]}>{t("settings.enableSedentaryReminders")}</Text>
           <Switch
             value={sedentaryEnabled}
             onValueChange={handleSedentaryToggle}
@@ -452,40 +474,40 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
         {sedentaryEnabled && (
           <>
-            <Text style={styles.inputTitle}>{t("settings.sedentaryIntervalHint")}</Text>
+            <Text style={[styles.inputTitle, dynamicStyles.inputTitle]}>{t("settings.sedentaryIntervalHint")}</Text>
             <View style={styles.inputRow}>
               <TextInput
-                style={styles.input}
+                style={[styles.input, dynamicStyles.input]}
                 value={sedentaryInterval}
                 onChangeText={setSedentaryInterval}
                 keyboardType="numeric"
                 placeholder="45"
-                placeholderTextColor="#8b8b8b"
+                placeholderTextColor={colors.textSecondary}
               />
-              <Text style={styles.inputLabel}>min</Text>
+              <Text style={[styles.inputLabel, dynamicStyles.inputLabel]}>min</Text>
             </View>
 
-            <Text style={styles.inputTitle}>{t("settings.sedentaryWindow")}</Text>
+            <Text style={[styles.inputTitle, dynamicStyles.inputTitle]}>{t("settings.sedentaryWindow")}</Text>
             <View style={styles.timeRow}>
               <View style={styles.timeInput}>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, dynamicStyles.input]}
                   value={sedentaryStart}
                   onChangeText={setSedentaryStart}
                   keyboardType="numeric"
                   placeholder="9"
-                  placeholderTextColor="#8b8b8b"
+                  placeholderTextColor={colors.textSecondary}
                 />
               </View>
-              <Text style={styles.timeSeparator}>{t("settings.toRange")}</Text>
+              <Text style={[styles.timeSeparator, dynamicStyles.timeSeparator]}>{t("settings.toRange")}</Text>
               <View style={styles.timeInput}>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, dynamicStyles.input]}
                   value={sedentaryEnd}
                   onChangeText={setSedentaryEnd}
                   keyboardType="numeric"
                   placeholder="18"
-                  placeholderTextColor="#8b8b8b"
+                  placeholderTextColor={colors.textSecondary}
                 />
               </View>
             </View>
@@ -501,43 +523,49 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
       </View>
 
       {/* ── Language ── */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t("settings.languageTitle")}</Text>
+      <View style={[styles.section, dynamicStyles.section]}>
+        <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>{t("settings.languageTitle")}</Text>
         <View style={styles.themeRow}>
           <TouchableOpacity
-            style={[styles.themeButton, currentLanguage === "en" && styles.themeButtonActive]}
+            style={[styles.themeButton, dynamicStyles.themeButton, currentLanguage === "en" && styles.themeButtonActive, currentLanguage === "en" && dynamicStyles.themeButtonActive]}
             onPress={() => handleLanguageChange("en")}
           >
             <Text
               style={[
                 styles.themeButtonText,
+                dynamicStyles.themeButtonText,
                 currentLanguage === "en" && styles.themeButtonTextActive,
+                currentLanguage === "en" && dynamicStyles.themeButtonTextActive,
               ]}
             >
               {t("settings.langEn")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.themeButton, currentLanguage === "zh" && styles.themeButtonActive]}
+            style={[styles.themeButton, dynamicStyles.themeButton, currentLanguage === "zh" && styles.themeButtonActive, currentLanguage === "zh" && dynamicStyles.themeButtonActive]}
             onPress={() => handleLanguageChange("zh")}
           >
             <Text
               style={[
                 styles.themeButtonText,
+                dynamicStyles.themeButtonText,
                 currentLanguage === "zh" && styles.themeButtonTextActive,
+                currentLanguage === "zh" && dynamicStyles.themeButtonTextActive,
               ]}
             >
               {t("settings.langZh")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.themeButton, currentLanguage === "system" && styles.themeButtonActive]}
+            style={[styles.themeButton, dynamicStyles.themeButton, currentLanguage === "system" && styles.themeButtonActive, currentLanguage === "system" && dynamicStyles.themeButtonActive]}
             onPress={() => handleLanguageChange("system")}
           >
             <Text
               style={[
                 styles.themeButtonText,
+                dynamicStyles.themeButtonText,
                 currentLanguage === "system" && styles.themeButtonTextActive,
+                currentLanguage === "system" && dynamicStyles.themeButtonTextActive,
               ]}
             >
               {t("settings.langSystem")}
@@ -547,34 +575,36 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
       </View>
 
       {/* ── v2.3.0: Smart Goal ── */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t("settings.smartGoalTitle")}</Text>
+      <View style={[styles.section, dynamicStyles.section]}>
+        <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>{t("settings.smartGoalTitle")}</Text>
 
-        <Text style={styles.inputTitle}>{t("settings.smartGoalWeight")}</Text>
+        <Text style={[styles.inputTitle, dynamicStyles.inputTitle]}>{t("settings.smartGoalWeight")}</Text>
         <View style={styles.inputRow}>
           <TextInput
-            style={styles.input}
+            style={[styles.input, dynamicStyles.input]}
             value={bodyWeight}
             onChangeText={setBodyWeight}
             keyboardType="numeric"
             placeholder={t("settings.smartGoalWeightPlaceholder")}
-            placeholderTextColor="#8b8b8b"
+            placeholderTextColor={colors.textSecondary}
           />
-          <Text style={styles.inputLabel}>kg</Text>
+          <Text style={[styles.inputLabel, dynamicStyles.inputLabel]}>kg</Text>
         </View>
 
-        <Text style={styles.inputTitle}>{t("settings.smartGoalActivity")}</Text>
+        <Text style={[styles.inputTitle, dynamicStyles.inputTitle]}>{t("settings.smartGoalActivity")}</Text>
         <View style={styles.themeRow}>
           {ACTIVITY_LEVELS.map((lvl) => (
             <TouchableOpacity
               key={lvl}
-              style={[styles.themeButton, activity === lvl && styles.themeButtonActive]}
+              style={[styles.themeButton, dynamicStyles.themeButton, activity === lvl && styles.themeButtonActive, activity === lvl && dynamicStyles.themeButtonActive]}
               onPress={() => setActivity(lvl)}
             >
               <Text
                 style={[
                   styles.themeButtonText,
+                  dynamicStyles.themeButtonText,
                   activity === lvl && styles.themeButtonTextActive,
+                  activity === lvl && dynamicStyles.themeButtonTextActive,
                 ]}
               >
                 {t(ACTIVITY_LABEL_KEY[lvl])}
@@ -583,18 +613,20 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
           ))}
         </View>
 
-        <Text style={styles.inputTitle}>{t("settings.smartGoalClimate")}</Text>
+        <Text style={[styles.inputTitle, dynamicStyles.inputTitle]}>{t("settings.smartGoalClimate")}</Text>
         <View style={styles.themeRow}>
           {CLIMATE_LEVELS.map((c) => (
             <TouchableOpacity
               key={c}
-              style={[styles.themeButton, climate === c && styles.themeButtonActive]}
+              style={[styles.themeButton, dynamicStyles.themeButton, climate === c && styles.themeButtonActive, climate === c && dynamicStyles.themeButtonActive]}
               onPress={() => setClimate(c)}
             >
               <Text
                 style={[
                   styles.themeButtonText,
+                  dynamicStyles.themeButtonText,
                   climate === c && styles.themeButtonTextActive,
+                  climate === c && dynamicStyles.themeButtonTextActive,
                 ]}
               >
                 {t(CLIMATE_LABEL_KEY[c])}
@@ -604,7 +636,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
         </View>
 
         {recommendedGoal !== null && (
-          <Text style={styles.recommendPreview}>
+          <Text style={[styles.recommendPreview, dynamicStyles.recommendPreview]}>
             {t("settings.smartGoalPreview", { n: recommendedGoal })}
           </Text>
         )}
@@ -624,39 +656,39 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
       </View>
 
       {/* ── v2.0.0: Theme & Customization ── */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t("settings.themeTitle")}</Text>
+      <View style={[styles.section, dynamicStyles.section]}>
+        <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>{t("settings.themeTitle")}</Text>
 
-        <Text style={styles.inputTitle}>{t("settings.themeMode")}</Text>
+        <Text style={[styles.inputTitle, dynamicStyles.inputTitle]}>{t("settings.themeMode")}</Text>
         <View style={styles.themeRow}>
           <TouchableOpacity
-            style={[styles.themeButton, theme === 'light' && styles.themeButtonActive]}
+            style={[styles.themeButton, dynamicStyles.themeButton, theme === 'light' && styles.themeButtonActive, theme === 'light' && dynamicStyles.themeButtonActive]}
             onPress={() => handleThemeChange('light')}
           >
-            <Text style={[styles.themeButtonText, theme === 'light' && styles.themeButtonTextActive]}>
+            <Text style={[styles.themeButtonText, dynamicStyles.themeButtonText, theme === 'light' && styles.themeButtonTextActive, theme === 'light' && dynamicStyles.themeButtonTextActive]}>
               {t("settings.themeLight")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.themeButton, theme === 'dark' && styles.themeButtonActive]}
+            style={[styles.themeButton, dynamicStyles.themeButton, theme === 'dark' && styles.themeButtonActive, theme === 'dark' && dynamicStyles.themeButtonActive]}
             onPress={() => handleThemeChange('dark')}
           >
-            <Text style={[styles.themeButtonText, theme === 'dark' && styles.themeButtonTextActive]}>
+            <Text style={[styles.themeButtonText, dynamicStyles.themeButtonText, theme === 'dark' && styles.themeButtonTextActive, theme === 'dark' && dynamicStyles.themeButtonTextActive]}>
               {t("settings.themeDark")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.themeButton, theme === 'system' && styles.themeButtonActive]}
+            style={[styles.themeButton, dynamicStyles.themeButton, theme === 'system' && styles.themeButtonActive, theme === 'system' && dynamicStyles.themeButtonActive]}
             onPress={() => handleThemeChange('system')}
           >
-            <Text style={[styles.themeButtonText, theme === 'system' && styles.themeButtonTextActive]}>
+            <Text style={[styles.themeButtonText, dynamicStyles.themeButtonText, theme === 'system' && styles.themeButtonTextActive, theme === 'system' && dynamicStyles.themeButtonTextActive]}>
               {t("settings.themeSystem")}
             </Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.switchRow}>
-          <Text style={styles.switchLabel}>{t("settings.haptics")}</Text>
+          <Text style={[styles.switchLabel, dynamicStyles.switchLabel]}>{t("settings.haptics")}</Text>
           <Switch
             value={hapticEnabled}
             onValueChange={handleHapticToggle}
@@ -665,14 +697,14 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
           />
         </View>
 
-        <Text style={styles.hintText}>
+        <Text style={[styles.hintText, dynamicStyles.hintText]}>
           {t("settings.customQuickHint")}
         </Text>
       </View>
 
       {/* ── Achievements ── */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t("settings.achievements")}</Text>
+      <View style={[styles.section, dynamicStyles.section]}>
+        <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>{t("settings.achievements")}</Text>
         <TouchableOpacity
           style={styles.saveButton}
           onPress={() => setShowAchievements(true)}
@@ -682,18 +714,18 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
       </View>
 
       {/* ── Data Export ── */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t("settings.dataTitle")}</Text>
+      <View style={[styles.section, dynamicStyles.section]}>
+        <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>{t("settings.dataTitle")}</Text>
         <TouchableOpacity style={styles.saveButton} onPress={handleExportData}>
           <Text style={styles.saveButtonText}>{t("settings.exportButton")}</Text>
         </TouchableOpacity>
       </View>
 
       {/* ── About ── */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t("settings.about")}</Text>
-        <Text style={styles.aboutText}>
-          Water Tracker v2.6.0{"\n"}
+      <View style={[styles.section, dynamicStyles.section]}>
+        <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>{t("settings.about")}</Text>
+        <Text style={[styles.aboutText, dynamicStyles.aboutText]}>
+          Water Tracker v2.7.0{"\n"}
           {t("app.about")}
         </Text>
       </View>

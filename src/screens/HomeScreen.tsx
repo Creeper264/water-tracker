@@ -9,13 +9,14 @@ import {
   Animated,
 } from "react-native";
 import Svg, { Circle } from "react-native-svg";
-import { DailyLog, UserSettings, StreakData } from "../types";
+import { DailyLog, UserSettings, StreakData, ThemeColors } from "../types";
 import PetCharacter from "../components/PetCharacter";
 import { calculatePetState } from "../utils/petState";
 import { getStreakData } from "../utils/storage";
 import { HapticsService } from "../utils/haptics";
 import { t, useLocale } from "../utils/i18n";
 import { BEVERAGES, DEFAULT_BEVERAGE_ID, getBeverageById, tBeverage } from "../utils/beverages";
+import { useTheme } from "../contexts/ThemeContext";
 
 const { width } = Dimensions.get("window");
 const CIRCLE_SIZE = width * 0.7;
@@ -23,16 +24,17 @@ const CIRCLE_SIZE = width * 0.7;
 interface ProgressRingProps {
   current: number;
   goal: number;
+  colors: ThemeColors;
 }
 
-const ProgressRing: React.FC<ProgressRingProps> = ({ current, goal }) => {
+const ProgressRing: React.FC<ProgressRingProps> = ({ current, goal, colors }) => {
   const progress = Math.min(current / goal, 1);
   const radius = (CIRCLE_SIZE - 48) / 2;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference * (1 - progress);
   const percentage = Math.round(progress * 100);
   const center = CIRCLE_SIZE / 2;
-  const progressColor = progress >= 1 ? "#00e676" : "#4FC3F7";
+  const progressColor = progress >= 1 ? "#00e676" : colors.accent;
 
   return (
     <View
@@ -50,7 +52,7 @@ const ProgressRing: React.FC<ProgressRingProps> = ({ current, goal }) => {
           cx={center}
           cy={center}
           r={radius}
-          stroke="#2d2d44"
+          stroke={colors.card}
           strokeWidth={16}
           fill="none"
         />
@@ -68,9 +70,9 @@ const ProgressRing: React.FC<ProgressRingProps> = ({ current, goal }) => {
         />
       </Svg>
       <View style={styles.progressInner}>
-        <Text style={styles.progressAmount}>{current}</Text>
-        <Text style={styles.progressUnit}>ml</Text>
-        <Text style={styles.progressGoal}>{t("home.goalLabel", { n: goal })}</Text>
+        <Text style={[styles.progressAmount, { color: colors.text }]}>{current}</Text>
+        <Text style={[styles.progressUnit, { color: colors.textSecondary }]}>ml</Text>
+        <Text style={[styles.progressGoal, { color: colors.textSecondary }]}>{t("home.goalLabel", { n: goal })}</Text>
         <Text style={[styles.progressPercent, { color: progressColor }]}>
           {percentage}%
         </Text>
@@ -82,18 +84,19 @@ const ProgressRing: React.FC<ProgressRingProps> = ({ current, goal }) => {
 interface WaterButtonProps {
   amount: number;
   onPress: () => void;
+  colors: ThemeColors;
 }
 
-const WaterButton: React.FC<WaterButtonProps> = ({ amount, onPress }) => {
+const WaterButton: React.FC<WaterButtonProps> = ({ amount, onPress, colors }) => {
   const handlePress = () => {
     // 点击按钮时播放轻触振动
     HapticsService.light();
     onPress();
   };
-  
+
   return (
-    <TouchableOpacity style={styles.waterButton} onPress={handlePress}>
-      <Text style={styles.waterButtonText}>{amount} ml</Text>
+    <TouchableOpacity style={[styles.waterButton, { backgroundColor: colors.accent }]} onPress={handlePress}>
+      <Text style={[styles.waterButtonText, { color: colors.background }]}>{amount} ml</Text>
     </TouchableOpacity>
   );
 };
@@ -112,6 +115,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   onRemoveEntry,
 }) => {
   useLocale(); // re-render on language change
+  const { colors } = useTheme();
   const [streakData, setStreakData] = useState<StreakData | null>(null);
   const [selectedBeverage, setSelectedBeverage] = useState<string>(DEFAULT_BEVERAGE_ID);
   const celebrationAnim = useRef(new Animated.Value(0)).current;
@@ -170,9 +174,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   const entries = todayLog?.entries ? [...todayLog.entries].reverse() : [];
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.greeting}>{getGreeting()}</Text>
-      <Text style={styles.title}>{t("home.statusTitle")}</Text>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
+      <Text style={[styles.greeting, { color: colors.textSecondary }]}>{getGreeting()}</Text>
+      <Text style={[styles.title, { color: colors.accent }]}>{t("home.statusTitle")}</Text>
 
       <PetCharacter
         state={petState}
@@ -182,7 +186,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
       />
 
       {streakData && streakData.currentStreak > 0 && (
-        <View style={styles.streakContainer}>
+        <View style={[styles.streakContainer, { backgroundColor: colors.card }]}>
           <Text style={styles.streakEmoji}>🔥</Text>
           <Text style={styles.streakText}>
             {t("home.streak", { n: streakData.currentStreak })}
@@ -190,9 +194,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         </View>
       )}
 
-      <ProgressRing current={total} goal={goal} />
+      <ProgressRing current={total} goal={goal} colors={colors} />
 
-      <Text style={styles.sectionTitle}>{t("home.quickAdd")}</Text>
+      <Text style={[styles.sectionTitle, { color: colors.text }]}>{t("home.quickAdd")}</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -205,7 +209,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
               key={b.id}
               style={[
                 styles.beverageChip,
-                active && { borderColor: b.color, backgroundColor: b.color + "22" },
+                { borderColor: active ? b.color : colors.border, backgroundColor: active ? b.color + "22" : colors.card },
               ]}
               onPress={() => {
                 HapticsService.light();
@@ -213,7 +217,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
               }}
             >
               <Text style={styles.beverageEmoji}>{b.emoji}</Text>
-              <Text style={[styles.beverageName, active && { color: b.color }]}>
+              <Text style={[styles.beverageName, { color: active ? b.color : colors.text }]}>
                 {tBeverage(b.id)}
               </Text>
             </TouchableOpacity>
@@ -226,13 +230,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
             key={button.id}
             amount={button.amount}
             onPress={() => onAddWater(button.amount, selectedBeverage)}
+            colors={colors}
           />
         ))}
       </View>
 
-      <Text style={styles.sectionTitle}>{t("home.todayLog")}</Text>
+      <Text style={[styles.sectionTitle, { color: colors.text }]}>{t("home.todayLog")}</Text>
       {entries.length === 0 ? (
-        <Text style={styles.emptyText}>{t("home.empty")}</Text>
+        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{t("home.empty")}</Text>
       ) : (
         entries.map((entry) => {
           const bev = getBeverageById(entry.beverageId);
@@ -240,18 +245,18 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
             entry.effectiveAmount !== undefined &&
             entry.effectiveAmount !== entry.amount;
           return (
-            <View key={entry.id} style={styles.entryItem}>
+            <View key={entry.id} style={[styles.entryItem, { backgroundColor: colors.card }]}>
               <Text style={styles.entryEmoji}>{bev.emoji}</Text>
               <View style={styles.entryInfo}>
-                <Text style={styles.entryAmount}>
+                <Text style={[styles.entryAmount, { color: colors.text }]}>
                   {entry.amount} ml
                   {isAdjusted && (
-                    <Text style={styles.entryEffective}>
+                    <Text style={[styles.entryEffective, { color: colors.accent }]}>
                       {"  "}≈ {entry.effectiveAmount} ml
                     </Text>
                   )}
                 </Text>
-                <Text style={styles.entryTime}>
+                <Text style={[styles.entryTime, { color: colors.textSecondary }]}>
                   {tBeverage(bev.id)} · {new Date(entry.timestamp).toLocaleTimeString()}
                 </Text>
               </View>
@@ -272,7 +277,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#1a1a2e",
   },
   content: {
     padding: 20,
@@ -280,19 +284,16 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: 18,
-    color: "#8b8b8b",
     marginBottom: 5,
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#4FC3F7",
     marginBottom: 20,
   },
   streakContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#2d2d44",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -319,15 +320,12 @@ const styles = StyleSheet.create({
   progressAmount: {
     fontSize: 48,
     fontWeight: "bold",
-    color: "#ffffff",
   },
   progressUnit: {
     fontSize: 18,
-    color: "#8b8b8b",
   },
   progressGoal: {
     fontSize: 14,
-    color: "#8b8b8b",
     marginTop: 5,
   },
   progressPercent: {
@@ -338,7 +336,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#ffffff",
     marginTop: 20,
     marginBottom: 15,
     alignSelf: "flex-start",
@@ -361,8 +358,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: "#3d3d54",
-    backgroundColor: "#2d2d44",
     marginRight: 8,
   },
   beverageEmoji: {
@@ -370,7 +365,6 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   beverageName: {
-    color: "#ffffff",
     fontSize: 13,
     fontWeight: "600",
   },
@@ -379,31 +373,26 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   entryEffective: {
-    color: "#4FC3F7",
     fontSize: 13,
     fontWeight: "normal",
   },
   waterButton: {
-    backgroundColor: "#4FC3F7",
     paddingVertical: 15,
     paddingHorizontal: 25,
     borderRadius: 12,
     margin: 5,
   },
   waterButtonText: {
-    color: "#1a1a2e",
     fontSize: 16,
     fontWeight: "bold",
   },
   emptyText: {
-    color: "#8b8b8b",
     fontSize: 16,
     marginTop: 10,
   },
   entryItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#2d2d44",
     padding: 15,
     borderRadius: 10,
     marginBottom: 10,
@@ -415,11 +404,9 @@ const styles = StyleSheet.create({
   entryAmount: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#ffffff",
   },
   entryTime: {
     fontSize: 14,
-    color: "#8b8b8b",
     marginTop: 3,
   },
   removeButton: {

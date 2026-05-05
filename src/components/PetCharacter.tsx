@@ -15,6 +15,7 @@ import PixelAnimation from "./pixel/PixelAnimation";
 import PixelDecoration from "./pixel/PixelDecoration";
 import { PET_ANIMATIONS } from "../utils/spriteFrames";
 import { DECORATION_SPRITES } from "../utils/decorationSprites";
+import { useTheme } from "../contexts/ThemeContext";
 
 interface PetCharacterProps {
   state: PetState;
@@ -33,8 +34,13 @@ const PetCharacter: React.FC<PetCharacterProps> = ({
   onPress,
   selectedDecorations,
 }) => {
+  const { colors } = useTheme();
   const color = getPetStateColor(state);
   const message = getPetStateMessage(state);
+
+  const dynamicStyles = useMemo(() => ({
+    tapHint: { color: colors.textSecondary },
+  }), [colors]);
 
   const activeDecorations = useMemo(() => {
     const result: Record<string, Decoration | null> = {
@@ -399,7 +405,7 @@ const PetCharacter: React.FC<PetCharacterProps> = ({
           </Animated.View>
         )}
 
-        <Text style={styles.tapHint}>点击互动</Text>
+        <Text style={[styles.tapHint, dynamicStyles.tapHint]}>点击互动</Text>
       </View>
     </TouchableOpacity>
   );
